@@ -781,6 +781,124 @@ text-transform: uppercase;
 font-weight: 600;
 }
 
+/* Race Summary Screen (Post-Race Strava-like) */
+#race-summary-screen {
+padding: 0;
+background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+color: #fff;
+min-height: 100vh;
+position: relative;
+display: none;
+}
+#race-summary-screen.active {
+display: flex;
+flex-direction: column;
+}
+.race-summary-topbar {
+text-align: center;
+padding: 1.5rem 1rem;
+background: rgba(0,0,0,0.3);
+}
+.race-summary-title {
+font-size: 1.8rem;
+font-weight: 800;
+color: #4caf50;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+.race-summary-body {
+flex: 1;
+display: flex;
+flex-direction: column;
+padding: 1rem;
+gap: 1rem;
+}
+.race-summary-stats {
+display: flex;
+justify-content: space-around;
+background: rgba(255,255,255,0.1);
+border-radius: 12px;
+padding: 1rem;
+}
+.race-stat {
+text-align: center;
+}
+.race-stat-value {
+font-size: 1.8rem;
+font-weight: 700;
+color: #fff;
+font-variant-numeric: tabular-nums;
+}
+.race-stat-label {
+font-size: 0.75rem;
+color: rgba(255,255,255,0.7);
+text-transform: uppercase;
+letter-spacing: 0.1em;
+margin-top: 0.25rem;
+}
+.race-summary-course {
+text-align: center;
+font-size: 1rem;
+color: rgba(255,255,255,0.8);
+padding: 0.5rem;
+}
+.race-summary-map {
+flex: 1;
+min-height: 300px;
+border-radius: 12px;
+overflow: hidden;
+border: 2px solid rgba(255,255,255,0.2);
+}
+.race-summary-actions {
+display: flex;
+gap: 1rem;
+padding: 1rem 0;
+}
+.race-summary-btn {
+flex: 1;
+padding: 1rem;
+font-size: 1rem;
+font-weight: 600;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+background: rgba(255,255,255,0.15);
+color: #fff;
+}
+.race-summary-btn.primary {
+background: #4caf50;
+color: #fff;
+}
+.race-summary-btn:active {
+transform: scale(0.98);
+}
+
+/* Finish Race Button (appears after last mark) */
+.finish-race-btn {
+display: none;
+width: 100%;
+padding: 1.2rem;
+font-size: 1.3rem;
+font-weight: 700;
+background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+color: #fff;
+border: none;
+border-radius: 12px;
+cursor: pointer;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+margin-top: 1rem;
+}
+.finish-race-btn.visible {
+display: block;
+animation: pulse-finish 2s infinite;
+}
+@keyframes pulse-finish {
+0%, 100% { box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); }
+50% { box-shadow: 0 4px 25px rgba(76, 175, 80, 0.7); }
+}
+
 /* Home Screen */
 .home-header {
 text-align: center;
@@ -2858,6 +2976,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 <div class="trimmer-tap-hint" id="trimmer-tap-hint">Hold anywhere for 1 second to mark passed</div>
+<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">🏁 Finish Race</button>
 </div>
 </div>
 
@@ -2927,6 +3046,35 @@ onclick="clearModalCourseSelection()"
 </div>
 </div>
 
+<!-- Race Summary Screen (Post-Race like Strava) -->
+<div id="race-summary-screen" class="screen">
+<div class="race-summary-topbar">
+<div class="race-summary-title">Race Complete!</div>
+</div>
+<div class="race-summary-body">
+<div class="race-summary-stats">
+<div class="race-stat">
+<div class="race-stat-value" id="race-total-time">--:--</div>
+<div class="race-stat-label">Total Time</div>
+</div>
+<div class="race-stat">
+<div class="race-stat-value" id="race-distance">--</div>
+<div class="race-stat-label">Distance (nm)</div>
+</div>
+<div class="race-stat">
+<div class="race-stat-value" id="race-avg-speed">--</div>
+<div class="race-stat-label">Avg Speed (kts)</div>
+</div>
+</div>
+<div class="race-summary-course" id="race-summary-course">Course: --</div>
+<div id="race-summary-map" class="race-summary-map"></div>
+<div class="race-summary-actions">
+<button class="race-summary-btn" onclick="shareRaceSummary()">📤 Share</button>
+<button class="race-summary-btn primary" onclick="closeRaceSummary()">🏠 Done</button>
+</div>
+</div>
+</div>
+
 <!-- Leaflet JavaScript -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -2985,6 +3133,11 @@ cmgSpeed: 0,
 // Speed calculation with rolling average
 speedHistory: [],
 averageSpeed: 0,
+// Race track recording for post-race summary
+raceTrack: [],
+raceStartTime: null,
+raceFinishTime: null,
+raceFinished: false,
 // Settings for map controls visibility
 settings: {
 showDebugButton: false,
@@ -4074,6 +4227,11 @@ app.cmgSpeed = 0;
 // Reset speed history
 app.speedHistory = [];
 app.averageSpeed = 0;
+// Reset race track recording
+app.raceTrack = [];
+app.raceStartTime = null;
+app.raceFinishTime = null;
+app.raceFinished = false;
 
 
 // Stop timer when returning to home
@@ -4352,6 +4510,10 @@ startGPSTracking();
 requestWakeLock();
 app.isNavigating = true;
 
+// Initialize race track recording
+app.raceTrack = [];
+app.raceStartTime = Date.now();
+app.raceFinished = false;
 
 console.log('Navigation started successfully');
 
@@ -5829,8 +5991,11 @@ sideEl.className = 'trimmer-mark-side';
 sideEl.style.background = '#1a1a1a';
 sideEl.style.color = '#888';
 setUpcomingEmpty('');
-if (hintEl) { hintEl.textContent = '🏆 Course complete'; hintEl.classList.add('complete'); }
+if (hintEl) { hintEl.textContent = '🏆 Course complete - Press Finish Race below'; hintEl.classList.add('complete'); }
 if (tapArea) tapArea.classList.add('disabled');
+// Show the Finish Race button
+const finishBtn = document.getElementById('finish-race-btn');
+if (finishBtn) finishBtn.classList.add('visible');
 return;
 }
 
@@ -5843,6 +6008,9 @@ sideEl.style.background = '';
 sideEl.style.color = '';
 if (hintEl) { hintEl.textContent = 'Hold anywhere for 1 second to mark passed'; hintEl.classList.remove('complete'); }
 if (tapArea) tapArea.classList.remove('disabled');
+// Hide the Finish Race button while marks remain
+const finishBtn = document.getElementById('finish-race-btn');
+if (finishBtn) finishBtn.classList.remove('visible');
 
 // Upcoming mark info: name on top, range & bearing from current mark below
 const afterIndex = app.currentBuoyIndex + 1;
@@ -5864,6 +6032,181 @@ upcomingStatsEl.textContent = 'position unknown';
 }
 } else {
 setUpcomingEmpty('Finish next');
+}
+}
+
+// ── Race Summary Functions (Post-Race Strava-like) ────────────────────────────
+function finishRace() {
+if (app.raceFinished) return;
+
+app.raceFinished = true;
+app.raceFinishTime = Date.now();
+
+// Stop the timer
+stopTimer();
+
+// Stop GPS tracking
+stopGPSTracking();
+
+console.log('Race finished!', {
+trackPoints: app.raceTrack.length,
+duration: app.raceFinishTime - app.raceStartTime
+});
+
+showRaceSummary();
+}
+
+function showRaceSummary() {
+// Calculate race statistics
+const totalTimeMs = app.raceFinishTime - app.raceStartTime;
+const totalMinutes = Math.floor(totalTimeMs / 60000);
+const totalSeconds = Math.floor((totalTimeMs % 60000) / 1000);
+const timeString = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+
+// Calculate total distance from track
+let totalDistance = 0;
+for (let i = 1; i < app.raceTrack.length; i++) {
+const prev = app.raceTrack[i - 1];
+const curr = app.raceTrack[i];
+totalDistance += calculateDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+}
+const distanceNM = (totalDistance / 1852).toFixed(2);
+
+// Calculate average speed
+const avgSpeedKts = totalTimeMs > 0 ? (totalDistance / 1852) / (totalTimeMs / 3600000) : 0;
+
+// Update summary display
+document.getElementById('race-total-time').textContent = timeString;
+document.getElementById('race-distance').textContent = distanceNM;
+document.getElementById('race-avg-speed').textContent = avgSpeedKts.toFixed(1);
+document.getElementById('race-summary-course').textContent = `Course: ${app.currentCourse ? app.currentCourse.name : 'Unknown'}`;
+
+// Show the race summary screen
+showScreen('race-summary-screen');
+
+// Initialize the summary map after a short delay to ensure the container is visible
+setTimeout(() => {
+initRaceSummaryMap();
+}, 100);
+}
+
+function initRaceSummaryMap() {
+const mapContainer = document.getElementById('race-summary-map');
+if (!mapContainer) return;
+
+// Clear any existing map
+mapContainer.innerHTML = '';
+
+// Create the map
+const summaryMap = L.map(mapContainer, {
+zoomControl: true,
+attributionControl: false
+});
+
+// Add tile layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 19
+}).addTo(summaryMap);
+
+const bounds = [];
+
+// Draw the race track (boat path)
+if (app.raceTrack.length > 1) {
+const trackCoords = app.raceTrack.map(p => [p.lat, p.lng]);
+const trackLine = L.polyline(trackCoords, {
+color: '#ff6b35',
+weight: 4,
+opacity: 0.9
+}).addTo(summaryMap);
+bounds.push(...trackCoords);
+
+// Add start marker
+const startIcon = L.divIcon({
+className: '',
+html: '<div style="background: #4caf50; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">S</div>',
+iconSize: [24, 24],
+iconAnchor: [12, 12]
+});
+L.marker(trackCoords[0], { icon: startIcon }).addTo(summaryMap).bindPopup('Start');
+
+// Add finish marker
+const finishIcon = L.divIcon({
+className: '',
+html: '<div style="background: #f44336; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">F</div>',
+iconSize: [24, 24],
+iconAnchor: [12, 12]
+});
+L.marker(trackCoords[trackCoords.length - 1], { icon: finishIcon }).addTo(summaryMap).bindPopup('Finish');
+}
+
+// Add course buoy markers with names
+if (app.currentCourse && app.currentCourse.data) {
+app.currentCourse.data.forEach(([buoyName, direction], index) => {
+const buoy = buoys[buoyName];
+if (!buoy) return;
+
+const [lat, lng] = buoy.coords;
+bounds.push([lat, lng]);
+
+const isPort = direction.toLowerCase() === 'p';
+const color = isPort ? '#dc3545' : '#28a745';
+
+const buoyIcon = L.divIcon({
+className: '',
+html: `<div style="background: ${color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${buoyName}</div>`,
+iconSize: [30, 30],
+iconAnchor: [15, 15]
+});
+
+L.marker([lat, lng], { icon: buoyIcon })
+.addTo(summaryMap)
+.bindPopup(`<strong>${buoyName} - ${buoy.name}</strong><br>${buoy.color}<br>${isPort ? 'Port' : 'Starboard'}`);
+});
+}
+
+// Fit map to show all points
+if (bounds.length > 0) {
+summaryMap.fitBounds(bounds, { padding: [30, 30] });
+}
+}
+
+function closeRaceSummary() {
+returnToHome();
+showScreen('home-screen');
+}
+
+function shareRaceSummary() {
+// Basic share functionality
+const totalTimeMs = app.raceFinishTime - app.raceStartTime;
+const totalMinutes = Math.floor(totalTimeMs / 60000);
+const totalSeconds = Math.floor((totalTimeMs % 60000) / 1000);
+
+let totalDistance = 0;
+for (let i = 1; i < app.raceTrack.length; i++) {
+const prev = app.raceTrack[i - 1];
+const curr = app.raceTrack[i];
+totalDistance += calculateDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+}
+const distanceNM = (totalDistance / 1852).toFixed(2);
+
+const shareText = `🏁 Race Complete!\n` +
+`Course: ${app.currentCourse ? app.currentCourse.name : 'Unknown'}\n` +
+`Time: ${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}\n` +
+`Distance: ${distanceNM} nm\n` +
+`#SailRace #DublinBay`;
+
+if (navigator.share) {
+navigator.share({
+title: 'SailRace - Race Complete',
+text: shareText
+}).catch(err => console.log('Share cancelled:', err));
+} else {
+// Fallback: copy to clipboard
+navigator.clipboard.writeText(shareText).then(() => {
+alert('Race summary copied to clipboard!');
+}).catch(() => {
+alert(shareText);
+});
 }
 }
 
@@ -6271,6 +6614,15 @@ lat: app.userPosition.latitude,
 lng: app.userPosition.longitude
 });
 
+// Record position to race track for post-race summary (only during active navigation)
+if (app.isNavigating && !app.raceFinished) {
+app.raceTrack.push({
+lat: finalPosition.latitude,
+lng: finalPosition.longitude,
+timestamp: Date.now(),
+accuracy: finalPosition.accuracy || 0
+});
+}
 
 // Always update navigation info for speed calculations
 updateNavigationInfo();
