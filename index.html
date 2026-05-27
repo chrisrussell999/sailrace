@@ -5029,10 +5029,18 @@ const displayPos = app.userPosition;
 if (rawPos) {
 const sourceInfo = detectPositionSource(rawPos, app.lastPositionTimestamp);
 
+// Check if we're still in "Acquiring Signal" period (first 20 seconds)
+const gpsAcquiringSignal = app.gpsTrackingStartTime && (Date.now() - app.gpsTrackingStartTime < 20000);
 
+if (gpsAcquiringSignal) {
+document.getElementById('debug-lat').textContent = 'Acquiring Signal...';
+document.getElementById('debug-lng').textContent = 'Acquiring Signal...';
+document.getElementById('debug-accuracy').textContent = 'Acquiring Signal...';
+} else {
 document.getElementById('debug-lat').textContent = rawPos.latitude.toFixed(6);
 document.getElementById('debug-lng').textContent = rawPos.longitude.toFixed(6);
 document.getElementById('debug-accuracy').textContent = `${Math.round(rawPos.accuracy || 0)}m`;
+}
 document.getElementById('debug-altitude').textContent = rawPos.altitude ? `${Math.round(rawPos.altitude)}m` : '-';
 document.getElementById('debug-speed').textContent = rawPos.speed ? `${(rawPos.speed * 1.94384).toFixed(1)}kt` : '-';
 document.getElementById('debug-heading').textContent = rawPos.heading ? `${Math.round(rawPos.heading)}°` : '-';
@@ -5070,8 +5078,14 @@ sourceElement.style.color = 'var(--text-primary)';
 
 
 if (displayPos) {
+const gpsAcquiring = app.gpsTrackingStartTime && (Date.now() - app.gpsTrackingStartTime < 20000);
+if (gpsAcquiring) {
+document.getElementById('debug-display-lat').textContent = 'Acquiring Signal...';
+document.getElementById('debug-display-lng').textContent = 'Acquiring Signal...';
+} else {
 document.getElementById('debug-display-lat').textContent = displayPos.latitude.toFixed(6);
 document.getElementById('debug-display-lng').textContent = displayPos.longitude.toFixed(6);
+}
 document.getElementById('debug-mode').textContent = app.usePositionSmoothing ? 'Smoothed' : 'Raw GPS';
 }
 }
@@ -6318,16 +6332,23 @@ console.error('Error adding accuracy circle:', error);
 
 
 // Update or create boat marker
+// Check if we're still in "Acquiring Signal" period (first 20 seconds)
+const gpsAcquiring = app.gpsTrackingStartTime && (Date.now() - app.gpsTrackingStartTime < 20000);
+
 if (app.boatMarker) {
 try {
 app.boatMarker.setLatLng(position);
 const mode = app.usePositionSmoothing ? 'Smoothed' : 'Raw';
-app.boatMarker.setPopupContent(`<strong>Your Position</strong><br>
+const positionText = gpsAcquiring ?
+`<strong>Your Position</strong><br>
+<small>Acquiring Signal...</small>` :
+`<strong>Your Position</strong><br>
 <small>Source: ${sourceInfo.sourceIcon} ${sourceInfo.source}<br>
 Mode: ${mode}<br>
 Lat: ${app.userPosition.latitude.toFixed(6)}<br>
 Lng: ${app.userPosition.longitude.toFixed(6)}<br>
-Accuracy: ±${Math.round(app.userPosition.accuracy || 0)}m</small>`);
+Accuracy: ±${Math.round(app.userPosition.accuracy || 0)}m</small>`;
+app.boatMarker.setPopupContent(positionText);
 } catch (error) {
 console.error('Error updating boat marker:', error);
 app.boatMarker = null;
@@ -6356,12 +6377,16 @@ iconAnchor: [15, 20]
 
 app.boatMarker = L.marker(position, { icon: boatIcon }).addTo(app.map);
 const mode = app.usePositionSmoothing ? 'Smoothed' : 'Raw';
-app.boatMarker.bindPopup(`<strong>Your Position</strong><br>
+const initialPopupText = gpsAcquiring ?
+`<strong>Your Position</strong><br>
+<small>Acquiring Signal...</small>` :
+`<strong>Your Position</strong><br>
 <small>Source: ${sourceInfo.sourceIcon} ${sourceInfo.source}<br>
 Mode: ${mode}<br>
 Lat: ${app.userPosition.latitude.toFixed(6)}<br>
 Lng: ${app.userPosition.longitude.toFixed(6)}<br>
-Accuracy: ±${Math.round(app.userPosition.accuracy || 0)}m</small>`);
+Accuracy: ±${Math.round(app.userPosition.accuracy || 0)}m</small>`;
+app.boatMarker.bindPopup(initialPopupText);
 
 
 console.log('Boat marker created at position');
@@ -6540,6 +6565,7 @@ app.positionPollingInterval = null;
 
 
 app.gpsHistory = [];
+app.gpsTrackingStartTime = Date.now(); // Track when GPS started for "Acquiring Signal" display
 let poorPositionCount = 0;
 let lastPosition = null;
 let frozenPositionCount = 0;
