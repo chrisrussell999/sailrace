@@ -4290,7 +4290,12 @@ showScreen('home-screen');
 
 
 function formatCoursePreview(course) {
-return course.map(([buoy, direction]) => `${buoy}(${direction.toLowerCase()})`).join(' → ');
+return course.map(([buoyLetter, direction]) => {
+const buoyInfo = buoys[buoyLetter];
+const name = buoyInfo ? buoyInfo.name : '';
+const dir = direction.toLowerCase() === 'p' ? 'P' : 'S';
+return `${buoyLetter} ${name} (${dir})`;
+}).join(' → ');
 }
 
 
