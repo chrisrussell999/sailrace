@@ -3285,33 +3285,32 @@ advancedControls.style.display = hasVisibleButton ? 'flex' : 'none';
 
 
 // Buoy positions (Dublin Bay area)
+// Each buoy: { coords: [lat, lng], name: "Name", color: "Color" }
 const buoys = {
-"A": [53.306000, -6.150000],
-"B": [53.317000, -6.135833],
-"C": [53.324667, -6.143333],
-"D": [53.333333, -6.138333],
-"E": [53.337000, -6.124167],
-"F": [53.334667, -6.111667],
-"G": [53.326667, -6.105000],
-"H": [53.312333, -6.129500],
-"J": [53.318500, -6.109333],
-"K": [53.314167, -6.122833],
-"L": [53.314667, -6.152000],
-"M": [53.325833, -6.124667],
-"N": [53.304667, -6.104667],
-"O": [53.306333, -6.132000],
-"P": [53.297000, -6.090000],
-"Q": [53.290833, -6.093000],
-"R": [53.288000, -6.102667],
-"S": [53.302667, -6.094667],
-"T": [53.292000, -6.110633],
-"V": [53.301667, -6.114000],
-"W": [53.295500, -6.118333],
-"X": [53.307167, -6.139000],
-"Y": [53.296333, -6.103833],
-"3":[53.304436, -6.135351]
-
-
+"A": { coords: [53.306000, -6.150000], name: "Salthill", color: "Orange" },
+"B": { coords: [53.317000, -6.135833], name: "Saoirse", color: "Green" },
+"C": { coords: [53.324667, -6.143333], name: "Seapoint", color: "Black" },
+"D": { coords: [53.333333, -6.138333], name: "South Bull", color: "Orange" },
+"E": { coords: [53.337000, -6.124167], name: "South Bar", color: "Yellow/Black" },
+"F": { coords: [53.334667, -6.111667], name: "Bligh", color: "Yellow/Orange" },
+"G": { coords: [53.326667, -6.105000], name: "New Ross", color: "Yellow/Blk/Wh" },
+"H": { coords: [53.312333, -6.129500], name: "Harbour", color: "Yellow" },
+"J": { coords: [53.318500, -6.109333], name: "Asgard", color: "Yellow/Black" },
+"K": { coords: [53.314167, -6.122833], name: "Boyd", color: "Orange" },
+"L": { coords: [53.314667, -6.152000], name: "Merrion", color: "Black/Yellow" },
+"M": { coords: [53.325833, -6.124667], name: "Middle", color: "Yellow" },
+"N": { coords: [53.304667, -6.104667], name: "Molly", color: "Yellow/Black" },
+"O": { coords: [53.306333, -6.132000], name: "Orange Start", color: "Orange" },
+"P": { coords: [53.297000, -6.090000], name: "Poldy", color: "Yellow/Orange" },
+"Q": { coords: [53.290833, -6.093000], name: "Island", color: "Black" },
+"R": { coords: [53.288000, -6.102667], name: "Bulloch", color: "Orange" },
+"S": { coords: [53.302667, -6.094667], name: "East", color: "Yellow/Green" },
+"T": { coords: [53.292000, -6.110633], name: "Battery", color: "Green/White" },
+"V": { coords: [53.301667, -6.114000], name: "Pier", color: "Orange" },
+"W": { coords: [53.295500, -6.118333], name: "Bay", color: "Black" },
+"X": { coords: [53.307167, -6.139000], name: "Turning", color: "Yellow" },
+"Y": { coords: [53.296333, -6.103833], name: "Omega", color: "Yellow" },
+"3": { coords: [53.304436, -6.135351], name: "Green", color: "Green" }
 };
 
 
@@ -4277,8 +4276,8 @@ let totalDistance = 0;
 for (let i = 0; i < courseData.length - 1; i++) {
 const [buoy1] = courseData[i];
 const [buoy2] = courseData[i + 1];
-const [lat1, lng1] = buoys[buoy1];
-const [lat2, lng2] = buoys[buoy2];
+const [lat1, lng1] = buoys[buoy1].coords;
+const [lat2, lng2] = buoys[buoy2].coords;
 totalDistance += calculateDistance(lat1, lng1, lat2, lng2);
 }
 const distanceNM = (totalDistance / 1852).toFixed(1);
@@ -4662,12 +4661,12 @@ app.mapLines = [];
 // Draw course line with mobile-friendly style
 try {
 const courseCoordinates = app.currentCourse.data.map(([buoyName]) => {
-const coords = buoys[buoyName];
-if (!coords) {
+const buoy = buoys[buoyName];
+if (!buoy) {
 console.error('No coordinates for buoy:', buoyName);
 return [0, 0];
 }
-return coords;
+return buoy.coords;
 });
 
 
@@ -4689,8 +4688,8 @@ console.error('Error drawing course line:', error);
 (() => {
 // Pre-compute pixel positions of every buoy at the current zoom
 const allBuoyPx = app.currentCourse.data.map(([bn]) => {
-const c = buoys[bn];
-return c ? app.map.latLngToContainerPoint(L.latLng(c[0], c[1])) : null;
+const b = buoys[bn];
+return b ? app.map.latLngToContainerPoint(L.latLng(b.coords[0], b.coords[1])) : null;
 }).filter(Boolean);
 
 
@@ -4705,14 +4704,14 @@ if (index >= app.currentCourse.data.length - 1) return;
 
 
 try {
-const fromCoords = buoys[buoyName];
+const fromBuoy = buoys[buoyName];
 const [nextBuoyName] = app.currentCourse.data[index + 1];
-const toCoords = buoys[nextBuoyName];
-if (!fromCoords || !toCoords) return;
+const toBuoy = buoys[nextBuoyName];
+if (!fromBuoy || !toBuoy) return;
 
 
-const [lat1, lng1] = fromCoords;
-const [lat2, lng2] = toCoords;
+const [lat1, lng1] = fromBuoy.coords;
+const [lat2, lng2] = toBuoy.coords;
 
 
 // Convert leg endpoints to container pixels
@@ -4802,11 +4801,11 @@ console.error('Error adding directional arrow:', error);
 // Add buoy markers with mobile-friendly sizes
 app.currentCourse.data.forEach(([buoyName, direction], index) => {
 try {
-const coords = buoys[buoyName];
-if (!coords) return;
+const buoy = buoys[buoyName];
+if (!buoy) return;
 
 
-const [lat, lng] = coords;
+const [lat, lng] = buoy.coords;
 const isCompleted = app.completedBuoys.has(index);
 const isCurrent = index === app.currentBuoyIndex;
 
@@ -4831,8 +4830,9 @@ iconAnchor: [17, 17]
 const marker = L.marker([lat, lng], { icon }).addTo(app.map);
 
 
-// Mobile-friendly popup
-const popupContent = `<strong>${buoyName}</strong><br>
+// Mobile-friendly popup with name and color
+const popupContent = `<strong>${buoyName} - ${buoy.name}</strong><br>
+<span style="color: ${buoy.color === 'Black' ? '#333' : buoy.color.split('/')[0].toLowerCase()};">${buoy.color}</span><br>
 ${direction.toLowerCase() === 'p' ? 'Port' : 'Starboard'}<br>
 <small>Lat: ${lat.toFixed(6)}<br>
 Lng: ${lng.toFixed(6)}</small>`;
@@ -5169,9 +5169,9 @@ const bounds = [];
 
 
 app.currentCourse.data.forEach(([buoyName]) => {
-const coords = buoys[buoyName];
-if (coords) {
-bounds.push(coords);
+const buoy = buoys[buoyName];
+if (buoy) {
+bounds.push(buoy.coords);
 }
 });
 
@@ -5207,16 +5207,18 @@ console.log('Updating navigation display for buoy index:', app.currentBuoyIndex)
 const currentBuoy = app.currentCourse.data[app.currentBuoyIndex];
 if (currentBuoy) {
 const [buoyName, direction] = currentBuoy;
+const buoyInfo = buoys[buoyName];
+const displayName = buoyInfo ? `${buoyName} - ${buoyInfo.name}` : buoyName;
 
 
-document.getElementById('next-buoy-name').textContent = `Next Mark: ${buoyName}`;
+document.getElementById('next-buoy-name').textContent = `Next Mark: ${displayName}`;
 const directionEl = document.getElementById('next-buoy-direction');
 directionEl.textContent = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard';
 directionEl.className = `buoy-direction ${direction.toLowerCase() === 'p' ? 'port' : 'starboard'}`;
 document.getElementById('buoys-remaining').textContent = app.currentCourse.data.length - app.currentBuoyIndex;
 
 
-document.getElementById('current-buoy-display-name-div').textContent = `Next Mark: ${buoyName}`;
+document.getElementById('current-buoy-display-name-div').textContent = `Next Mark: ${displayName}`;
 document.getElementById('current-buoy-display-direction').textContent =
 `${direction.toLowerCase() === 'p' ? 'Port' : 'Starboard'} - Next Target`;
 }
@@ -5260,6 +5262,7 @@ app.currentCourse.data.forEach(([buoyName, direction], index) => {
 const isCompleted = app.completedBuoys.has(index);
 const isCurrent = index === app.currentBuoyIndex;
 const canUnmark = index === app.currentBuoyIndex - 1;
+const buoy = buoys[buoyName];
 
 
 const directionText = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard';
@@ -5300,7 +5303,7 @@ buoyItem.className = itemClass;
 
 buoyItem.innerHTML = `
 <div class="sequence-buoy-number ${isCompleted ? 'completed' : ''}">${index + 1}</div>
-<div class="sequence-buoy-name">${buoyName}</div>
+<div class="sequence-buoy-name">${buoyName}${buoy ? ' - ' + buoy.name : ''}</div>
 <div class="sequence-buoy-direction ${directionClass}">${directionText}</div>
 <div class="sequence-buoy-status ${statusClass}">${statusText}</div>
 `;
@@ -5383,6 +5386,7 @@ container.innerHTML = '';
 app.currentCourse.data.forEach(([buoyName, direction], index) => {
 const isCompleted = app.completedBuoys.has(index);
 const isCurrent = index === app.currentBuoyIndex;
+const buoy = buoys[buoyName];
 
 
 const directionText = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard';
@@ -5395,7 +5399,7 @@ buoyItem.className = `buoy-simple-item ${isCurrent ? 'current' : ''} ${isComplet
 
 buoyItem.innerHTML = `
 <div class="buoy-simple-number ${isCompleted ? 'completed' : ''}">${index + 1}</div>
-<div class="buoy-simple-name">${buoyName}</div>
+<div class="buoy-simple-name">${buoyName}${buoy ? ' - ' + buoy.name : ''}</div>
 <div class="buoy-simple-direction ${directionClass}">${directionText}</div>
 `;
 
@@ -5496,9 +5500,9 @@ markSideEl.className = 'pm-side ' + (isPort ? 'port' : 'starboard');
 // Distance/bearing — only meaningful if we have GPS
 if (app.userPosition && app.currentCourse && app.currentCourse.data.length > 0) {
 const [firstName] = app.currentCourse.data[0];
-const coords = (typeof buoys !== 'undefined') ? buoys[firstName] : null;
-if (coords) {
-const [lat, lng] = coords;
+const buoy = (typeof buoys !== 'undefined') ? buoys[firstName] : null;
+if (buoy) {
+const [lat, lng] = buoy.coords;
 const dist = calculateDistance(app.userPosition.latitude, app.userPosition.longitude, lat, lng);
 const brg = calculateBearing(app.userPosition.latitude, app.userPosition.longitude, lat, lng);
 if (distEl) distEl.textContent = (dist / 1852).toFixed(2);
@@ -5844,15 +5848,15 @@ if (tapArea) tapArea.classList.remove('disabled');
 const afterIndex = app.currentBuoyIndex + 1;
 if (afterIndex < app.currentCourse.data.length) {
 const [afterName] = app.currentCourse.data[afterIndex];
-const thisMark = buoys[buoyName];
-const afterMark = buoys[afterName];
+const thisBuoy = buoys[buoyName];
+const afterBuoy = buoys[afterName];
 if (upcomingWrap) upcomingWrap.classList.remove('empty');
 if (arrowEl) arrowEl.style.opacity = '';
-if (upcomingNameEl) upcomingNameEl.textContent = afterName;
+if (upcomingNameEl) upcomingNameEl.textContent = afterBuoy ? `${afterName} - ${afterBuoy.name}` : afterName;
 if (upcomingStatsEl) {
-if (thisMark && afterMark) {
-const legDist = calculateDistance(thisMark[0], thisMark[1], afterMark[0], afterMark[1]) / 1852;
-const legBrg = calculateBearing(thisMark[0], thisMark[1], afterMark[0], afterMark[1]);
+if (thisBuoy && afterBuoy) {
+const legDist = calculateDistance(thisBuoy.coords[0], thisBuoy.coords[1], afterBuoy.coords[0], afterBuoy.coords[1]) / 1852;
+const legBrg = calculateBearing(thisBuoy.coords[0], thisBuoy.coords[1], afterBuoy.coords[0], afterBuoy.coords[1]);
 upcomingStatsEl.innerHTML = legDist.toFixed(2) + ' nm<span class="sep">·</span>' + Math.round(legBrg) + '°';
 } else {
 upcomingStatsEl.textContent = 'position unknown';
@@ -5942,7 +5946,7 @@ const layers = [];
 if (!map || !course || typeof buoys === 'undefined') return layers;
 
 const courseCoords = course.data
-.map(([name]) => buoys[name])
+.map(([name]) => buoys[name] ? buoys[name].coords : null)
 .filter(Boolean);
 
 // Course polyline — same colour/weight/opacity as the main nav map
@@ -5960,9 +5964,9 @@ layers.push(line);
 
 // Buoy markers using the same divIcon HTML as the main nav map
 course.data.forEach(([buoyName, direction], index) => {
-const coords = buoys[buoyName];
-if (!coords) return;
-const [lat, lng] = coords;
+const buoy = buoys[buoyName];
+if (!buoy) return;
+const [lat, lng] = buoy.coords;
 
 const isCompleted = opts.completedBuoys ? opts.completedBuoys.has(index) : false;
 const isCurrent = (opts.currentBuoyIndex != null) && index === opts.currentBuoyIndex;
@@ -5980,7 +5984,7 @@ iconAnchor: [17, 17]
 });
 const marker = L.marker([lat, lng], { icon }).addTo(map);
 marker.bindPopup(
-`<strong>${buoyName}</strong><br>${direction.toLowerCase() === 'p' ? 'Port' : 'Starboard'}`,
+`<strong>${buoyName} - ${buoy.name}</strong><br><span style="color: ${buoy.color === 'Black' ? '#333' : buoy.color.split('/')[0].toLowerCase()};">${buoy.color}</span><br>${direction.toLowerCase() === 'p' ? 'Port' : 'Starboard'}`,
 { closeButton: true, autoClose: true }
 );
 layers.push(marker);
@@ -6006,8 +6010,8 @@ maxZoom: opts.maxZoom || 15
 // Directional arrows — same algorithm as the main navigation map
 try {
 const allBuoyPx = course.data.map(([bn]) => {
-const c = buoys[bn];
-return c ? map.latLngToContainerPoint(L.latLng(c[0], c[1])) : null;
+const b = buoys[bn];
+return b ? map.latLngToContainerPoint(L.latLng(b.coords[0], b.coords[1])) : null;
 }).filter(Boolean);
 
 const OFFSET = 36;
@@ -6016,13 +6020,13 @@ const CLEARANCE = 32;
 course.data.forEach(([buoyName], index) => {
 if (index >= course.data.length - 1) return;
 try {
-const fromCoords = buoys[buoyName];
+const fromBuoy = buoys[buoyName];
 const [nextBuoyName] = course.data[index + 1];
-const toCoords = buoys[nextBuoyName];
-if (!fromCoords || !toCoords) return;
+const toBuoy = buoys[nextBuoyName];
+if (!fromBuoy || !toBuoy) return;
 
-const [lat1, lng1] = fromCoords;
-const [lat2, lng2] = toCoords;
+const [lat1, lng1] = fromBuoy.coords;
+const [lat2, lng2] = toBuoy.coords;
 const p1px = map.latLngToContainerPoint(L.latLng(lat1, lng1));
 const p2px = map.latLngToContainerPoint(L.latLng(lat2, lng2));
 const dx = p2px.x - p1px.x, dy = p2px.y - p1px.y;
@@ -6410,9 +6414,9 @@ console.error('Error removing bearing line:', e);
 if (app.currentCourse && app.currentBuoyIndex < app.currentCourse.data.length) {
 try {
 const [nextBuoyName] = app.currentCourse.data[app.currentBuoyIndex];
-const nextCoords = buoys[nextBuoyName];
-if (nextCoords) {
-const [nextLat, nextLng] = nextCoords;
+const nextBuoy = buoys[nextBuoyName];
+if (nextBuoy) {
+const [nextLat, nextLng] = nextBuoy.coords;
 
 
 app.bearingLine = L.polyline([
@@ -6907,7 +6911,7 @@ return;
 
 
 const [nextBuoyName] = app.currentCourse.data[app.currentBuoyIndex];
-const [nextLat, nextLng] = buoys[nextBuoyName];
+const [nextLat, nextLng] = buoys[nextBuoyName].coords;
 
 
 const distance = calculateDistance(
