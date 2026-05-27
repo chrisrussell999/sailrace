@@ -917,37 +917,20 @@ animation: pulse-finish 2s infinite;
 /* Home Screen */
 .home-header {
 text-align: center;
-padding: 3rem 1rem 2rem;
+padding: 0.75rem 1rem 0.5rem;
 }
 
 
 .home-header h1 {
-font-size: 3rem;
-margin-bottom: 0.5rem;
+font-size: 1.8rem;
+margin-bottom: 0.1rem;
 color: var(--accent-blue);
 }
 
 
 .home-header p {
 color: var(--text-secondary);
-font-size: 1.1rem;
-}
-
-
-@media (max-width: 480px) {
-.home-header {
-padding: 2rem 1rem 1.5rem;
-}
-
-
-.home-header h1 {
-font-size: 2.5rem;
-}
-
-
-.home-header p {
-font-size: 1rem;
-}
+font-size: 0.85rem;
 }
 
 
@@ -1195,69 +1178,66 @@ font-family: monospace;
 /* Course Selection */
 .course-selection-container {
 max-width: 600px;
-margin: 2rem auto;
+margin: 0.5rem auto;
 padding: 0 1rem;
 }
 
 
 .course-set-selector-wrapper {
-margin-bottom: 1.5rem;
+margin-bottom: 0.75rem;
 }
 
 
 .course-set-select {
 width: 100%;
-padding: 1rem;
-padding-right: 2.5rem;
+padding: 0.6rem;
+padding-right: 2rem;
 background: var(--secondary-bg);
 border: 2px solid var(--border-color);
-border-radius: 8px;
+border-radius: 6px;
 color: var(--text-primary);
-font-size: 16px; /* Prevent zoom on iOS */
+font-size: 16px;
 font-weight: 600;
 cursor: pointer;
 appearance: none;
 -webkit-appearance: none;
 background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23000' d='M6 8L0 0h12z'/></svg>");
 background-repeat: no-repeat;
-background-position: right 1rem center;
-transition: border-color 0.2s ease, background-color 0.2s ease;
+background-position: right 0.75rem center;
 }
 
 
 .course-set-select:focus {
 outline: none;
 border-color: var(--accent-blue);
-background-color: var(--primary-bg);
 }
 
 
 .course-selector-wrapper {
 position: relative;
-margin-bottom: 1.5rem;
+margin-bottom: 0.75rem;
 }
 
 
 .course-selector-label {
 display: block;
-margin-bottom: 0.5rem;
+margin-bottom: 0.25rem;
 color: var(--text-primary);
 font-weight: 600;
-font-size: 1.1rem;
+font-size: 0.9rem;
 }
 
 
 .course-selector-input {
 width: 100%;
-padding: 1rem;
+padding: 0.6rem;
 padding-right: 40px;
 background: var(--secondary-bg);
 border: 2px solid var(--border-color);
-border-radius: 8px;
+border-radius: 6px;
 color: var(--text-primary);
-font-size: 16px; /* Prevent zoom on iOS */
+font-size: 16px;
 cursor: pointer;
-transition: all 0.3s ease;
 }
 
 
@@ -1340,9 +1320,9 @@ color: var(--text-secondary);
 .course-details-card {
 background: var(--secondary-bg);
 border: 2px solid var(--border-color);
-border-radius: 8px;
-padding: 0.75rem;
-margin-bottom: 0.75rem;
+border-radius: 6px;
+padding: 0.5rem;
+margin-bottom: 0.5rem;
 display: none;
 }
 
@@ -1352,41 +1332,44 @@ display: block;
 }
 
 
-.course-details-title {
-font-size: 1.2rem;
-font-weight: 600;
-color: var(--accent-blue);
-margin-bottom: 0.5rem;
+.course-details-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 0.4rem;
 }
 
 
-.course-details-sequence {
-background: var(--primary-bg);
-padding: 0.5rem;
-border-radius: 6px;
-margin-bottom: 0.5rem;
-font-family: monospace;
-font-size: 0.85rem;
-word-break: break-all;
-line-height: 1.4;
-color: var(--text-secondary);
-max-height: 80px;
-overflow-y: auto;
+.course-details-title {
+font-size: 1.3rem;
+font-weight: 700;
+color: var(--accent-blue);
+margin: 0;
 }
 
 
 .course-details-info {
 display: flex;
-justify-content: center;
-gap: 1.5rem;
-margin-bottom: 0.5rem;
+gap: 0.75rem;
+font-size: 0.8rem;
+color: var(--text-secondary);
+}
+
+
+.course-details-sequence {
+background: var(--primary-bg);
+padding: 0.4rem 0.5rem;
+border-radius: 4px;
+margin-bottom: 0.4rem;
+font-family: monospace;
+font-size: 0.8rem;
+line-height: 1.3;
+color: var(--text-secondary);
 }
 
 
 .course-info-item {
-background: var(--primary-bg);
-padding: 0.4rem 0.75rem;
-border-radius: 6px;
+display: none;
 text-align: center;
 }
 
@@ -2543,26 +2526,22 @@ onclick="clearCourseSelection()"
 </div>
 
 <div id="course-details" class="course-details-card">
+<div class="course-details-header">
 <div class="course-details-title" id="selected-course-name">-</div>
-<div class="course-details-sequence" id="selected-course-sequence">-</div>
 <div class="course-details-info">
-<div class="course-info-item">
-<div class="course-info-value" id="selected-course-marks">-</div>
-<div class="course-info-label">Total Marks</div>
-</div>
-<div class="course-info-item">
-<div class="course-info-value" id="selected-course-distance">-</div>
-<div class="course-info-label">Est. Distance (nm)</div>
+<span><span id="selected-course-marks">-</span> marks</span>
+<span>•</span>
+<span><span id="selected-course-distance">-</span> nm</span>
 </div>
 </div>
+<div class="course-details-sequence" id="selected-course-sequence">-</div>
 <button id="start-navigation-btn" class="start-navigation-btn" disabled onclick="startSelectedCourse()">
 🚀 Start Navigation
 </button>
 </div>
 
-<div style="text-align: center; margin-top: 2rem; color: var(--text-secondary); font-size: 0.9rem;">
-<p>🚢 Courses are pre-configured for Dublin Bay racing</p>
-<p>🧭 GPS permission required for navigation</p>
+<div style="text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.75rem;">
+<p style="margin: 0.2rem 0;">🚢 Dublin Bay racing • 🧭 GPS required</p>
 
 <!-- Position Source Warning -->
 
