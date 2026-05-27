@@ -920,20 +920,20 @@ animation: pulse-finish 2s infinite;
 /* Home Screen */
 .home-header {
 text-align: center;
-padding: 0.75rem 1rem 0.5rem;
+padding: 0.4rem 1rem 0.25rem;
 }
 
 
 .home-header h1 {
-font-size: 1.8rem;
-margin-bottom: 0.1rem;
+font-size: 1.5rem;
+margin-bottom: 0;
 color: var(--accent-blue);
 }
 
 
 .home-header p {
 color: var(--text-secondary);
-font-size: 0.85rem;
+font-size: 0.75rem;
 }
 
 
@@ -1181,13 +1181,13 @@ font-family: monospace;
 /* Course Selection */
 .course-selection-container {
 max-width: 600px;
-margin: 0.5rem auto;
+margin: 0.25rem auto;
 padding: 0 1rem;
 }
 
 
 .course-set-selector-wrapper {
-margin-bottom: 0.75rem;
+margin-bottom: 0.4rem;
 }
 
 
@@ -1218,16 +1218,16 @@ border-color: var(--accent-blue);
 
 .course-selector-wrapper {
 position: relative;
-margin-bottom: 0.75rem;
+margin-bottom: 0.4rem;
 }
 
 
 .course-selector-label {
 display: block;
-margin-bottom: 0.25rem;
+margin-bottom: 0.15rem;
 color: var(--text-primary);
 font-weight: 600;
-font-size: 0.9rem;
+font-size: 0.8rem;
 }
 
 
@@ -1324,8 +1324,8 @@ color: var(--text-secondary);
 background: var(--secondary-bg);
 border: 2px solid var(--border-color);
 border-radius: 6px;
-padding: 0.5rem;
-margin-bottom: 0.5rem;
+padding: 0.4rem;
+margin-bottom: 0.3rem;
 display: none;
 }
 
@@ -1339,12 +1339,12 @@ display: block;
 display: flex;
 justify-content: space-between;
 align-items: center;
-margin-bottom: 0.4rem;
+margin-bottom: 0.25rem;
 }
 
 
 .course-details-title {
-font-size: 1.3rem;
+font-size: 1.1rem;
 font-weight: 700;
 color: var(--accent-blue);
 margin: 0;
@@ -1353,21 +1353,37 @@ margin: 0;
 
 .course-details-info {
 display: flex;
-gap: 0.75rem;
-font-size: 0.8rem;
+gap: 0.5rem;
+font-size: 0.7rem;
 color: var(--text-secondary);
 }
 
 
 .course-details-sequence {
 background: var(--primary-bg);
-padding: 0.4rem 0.5rem;
+padding: 0.3rem 0.4rem;
 border-radius: 4px;
-margin-bottom: 0.4rem;
+margin-bottom: 0.3rem;
 font-family: monospace;
-font-size: 0.8rem;
-line-height: 1.3;
+font-size: 0.7rem;
+line-height: 1.15;
 color: var(--text-secondary);
+max-height: 180px;
+overflow-y: auto;
+}
+
+.course-mark-row {
+padding: 0.1rem 0;
+white-space: nowrap;
+}
+
+.mark-num {
+color: var(--text-secondary);
+opacity: 0.7;
+}
+
+.mark-dir {
+color: var(--accent-blue);
 }
 
 
@@ -1392,12 +1408,12 @@ color: var(--text-secondary);
 
 .start-navigation-btn {
 width: 100%;
-padding: 0.75rem 1.5rem;
+padding: 0.5rem 1rem;
 background: var(--accent-blue);
 color: white;
 border: none;
-border-radius: 8px;
-font-size: 1rem;
+border-radius: 6px;
+font-size: 0.9rem;
 font-weight: 600;
 cursor: pointer;
 transition: all 0.3s ease;
@@ -2543,8 +2559,8 @@ onclick="clearCourseSelection()"
 </button>
 </div>
 
-<div style="text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.75rem;">
-<p style="margin: 0.2rem 0;">🚢 Dublin Bay racing • 🧭 GPS required</p>
+<div style="text-align: center; margin-top: 0.25rem; color: var(--text-secondary); font-size: 0.7rem;">
+<p style="margin: 0.1rem 0;">🚢 Dublin Bay racing • 🧭 GPS required</p>
 
 <!-- Position Source Warning -->
 
@@ -4302,6 +4318,17 @@ return `${buoyLetter} ${name} (${dir})`;
 }
 
 
+function formatCoursePreviewNumbered(course) {
+return course.map(([buoyLetter, direction], index) => {
+const buoyInfo = buoys[buoyLetter];
+const name = buoyInfo ? buoyInfo.name : '';
+const dir = direction.toLowerCase() === 'p' ? 'P' : 'S';
+const num = (index + 1).toString().padStart(2, ' ');
+return `<div class="course-mark-row"><span class="mark-num">${num}.</span> ${buoyLetter} ${name} <span class="mark-dir">(${dir})</span></div>`;
+}).join('');
+}
+
+
 // Course selection functions
 
 
@@ -4450,7 +4477,7 @@ const distanceNM = (totalDistance / 1852).toFixed(1);
 
 
 document.getElementById('selected-course-name').textContent = courseName;
-document.getElementById('selected-course-sequence').textContent = formatCoursePreview(courseData);
+document.getElementById('selected-course-sequence').innerHTML = formatCoursePreviewNumbered(courseData);
 document.getElementById('selected-course-marks').textContent = courseData.length;
 document.getElementById('selected-course-distance').textContent = distanceNM;
 
