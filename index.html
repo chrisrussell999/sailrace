@@ -541,6 +541,10 @@ flex-direction: column;
 align-items: center;
 justify-content: center;
 min-height: 80px;
+cursor: pointer;
+user-select: none;
+-webkit-user-select: none;
+touch-action: manipulation;
 }
 .trimmer-timer.idle { opacity: 0.45; }
 .trimmer-timer.warning { background: #3a2f00; border-color: #6b5500; }
@@ -560,6 +564,15 @@ animation: none;
 .trimmer-timer.racing .trimmer-timer-label::after {
 content: ' · elapsed';
 color: #66ff88;
+}
+.trimmer-timer.pressing {
+opacity: 0.6;
+transform: scale(0.97);
+transition: transform 0.1s, opacity 0.1s;
+}
+.trimmer-timer.confirmed {
+transform: scale(1.05);
+transition: transform 0.15s;
 }
 @keyframes trimmer-pulse {
 0%, 100% { background: #3a0000; }
@@ -2669,7 +2682,8 @@ Fix for Pixel 8 / Android:
 
 <div class="timer-duration-selector">
 
-<button id="timer-11min-btn" class="timer-duration-btn" onclick="setTimerDuration(660)">11:00</button>
+<button id="timer-25min-btn" class="timer-duration-btn" onclick="setTimerDuration(1500)">25:00</button>
+<button id="timer-15min-btn" class="timer-duration-btn" onclick="setTimerDuration(900)">15:00</button>
 <button id="timer-10min-btn" class="timer-duration-btn active" onclick="setTimerDuration(600)">10:00</button>
 <button id="timer-6min-btn" class="timer-duration-btn" onclick="setTimerDuration(360)">6:00</button>
 <button id="timer-5min-btn" class="timer-duration-btn" onclick="setTimerDuration(300)">5:00</button>
@@ -2897,7 +2911,8 @@ Must follow course sequence - no skipping ahead!
 <div class="prestart-timer-label">⏱️ Race Timer</div>
 <div id="prestart-timer-display">10:00</div>
 <div class="prestart-duration-row">
-<button class="prestart-duration-btn" data-dur="660" onclick="setTimerDuration(660)">11:00</button>
+<button class="prestart-duration-btn" data-dur="1500" onclick="setTimerDuration(1500)">25:00</button>
+<button class="prestart-duration-btn" data-dur="900" onclick="setTimerDuration(900)">15:00</button>
 <button class="prestart-duration-btn active" data-dur="600" onclick="setTimerDuration(600)">10:00</button>
 <button class="prestart-duration-btn" data-dur="360" onclick="setTimerDuration(360)">6:00</button>
 <button class="prestart-duration-btn" data-dur="300" onclick="setTimerDuration(300)">5:00</button>
@@ -3195,7 +3210,8 @@ app.timer.startTime = null;
 
 
 // Update button states
-document.getElementById('timer-11min-btn').classList.toggle('active', seconds === 660);
+document.getElementById('timer-25min-btn').classList.toggle('active', seconds === 1500);
+document.getElementById('timer-15min-btn').classList.toggle('active', seconds === 900);
 document.getElementById('timer-10min-btn').classList.toggle('active', seconds === 600);
 document.getElementById('timer-6min-btn').classList.toggle('active', seconds === 360);
 document.getElementById('timer-5min-btn').classList.toggle('active', seconds === 300);
@@ -3213,7 +3229,8 @@ let durationText;
 
 
 switch(seconds) {
-case 660: durationText = '11:00'; break;
+case 1500: durationText = '25:00'; break;
+case 900: durationText = '15:00'; break;
 case 600: durationText = '10:00'; break;
 case 360: durationText = '6:00'; break;
 case 300: durationText = '5:00'; break;
@@ -5777,6 +5794,7 @@ updateTrimmerStats({ noGPS: true });
 requestWakeLock();
 // Attach long-press handlers (idempotent) and start with the bar visible
 attachTrimmerPressHandlers();
+attachTimerBoxPressHandlers();
 revealTrimmerBar();
 // Enter fullscreen to hide browser address bar / bottom bar
 enterTrimmerFullscreen();
@@ -5965,6 +5983,95 @@ area.addEventListener('pointercancel', cancelTrimmerPress);
 // catches real interruptions (incoming call, system gesture, etc.).
 area.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 trimmerHandlersAttached = true;
+}
+
+// ── Timer Box Long-Press to Restart ──────────────────────────────────
+const TIMER_BOX_HOLD_MS = 500; // 0.5 second hold
+let timerBoxPressTimer = null;
+let timerBoxPressStart = null;
+let timerBoxPressPointerId = null;
+let timerBoxHandlersAttached = false;
+
+function cancelTimerBoxPress() {
+if (timerBoxPressTimer) { clearTimeout(timerBoxPressTimer); timerBoxPressTimer = null; }
+const box = document.getElementById('trimmer-timer-box');
+if (box) {
+box.classList.remove('pressing');
+if (timerBoxPressPointerId != null && timerBoxPressPointerId !== 'mouse'
+&& typeof box.releasePointerCapture === 'function') {
+try { box.releasePointerCapture(timerBoxPressPointerId); } catch (err) {}
+}
+}
+timerBoxPressStart = null;
+timerBoxPressPointerId = null;
+}
+
+function timerBoxOnPressStart(e) {
+if (timerBoxPressPointerId !== null) return;
+try { e.preventDefault(); } catch (err) {}
+
+timerBoxPressPointerId = e.pointerId != null ? e.pointerId : 'mouse';
+timerBoxPressStart = { x: e.clientX, y: e.clientY };
+
+const box = document.getElementById('trimmer-timer-box');
+if (box) {
+box.classList.add('pressing');
+if (e.pointerId != null && typeof box.setPointerCapture === 'function') {
+try { box.setPointerCapture(e.pointerId); } catch (err) {}
+}
+}
+
+timerBoxPressTimer = setTimeout(timerBoxOnPressComplete, TIMER_BOX_HOLD_MS);
+}
+
+function timerBoxOnPressMove(e) {
+if (timerBoxPressPointerId === null || !timerBoxPressStart) return;
+const dx = e.clientX - timerBoxPressStart.x;
+const dy = e.clientY - timerBoxPressStart.y;
+if (Math.hypot(dx, dy) > TRIMMER_HOLD_MOVE_CANCEL_PX) cancelTimerBoxPress();
+}
+
+function timerBoxOnPressEnd(e) {
+if (timerBoxPressPointerId === null) return;
+if (timerBoxPressTimer) cancelTimerBoxPress();
+}
+
+function timerBoxOnPressComplete() {
+timerBoxPressTimer = null;
+timerBoxPressPointerId = null;
+timerBoxPressStart = null;
+const box = document.getElementById('trimmer-timer-box');
+if (box) {
+box.classList.remove('pressing');
+box.classList.add('confirmed');
+setTimeout(() => box.classList.remove('confirmed'), 250);
+}
+if (navigator.vibrate) { try { navigator.vibrate([60, 40, 60]); } catch (e) {} }
+// Go back to prestart screen and reset timer for restart
+goBackToPrestartAndRestart();
+}
+
+function goBackToPrestartAndRestart() {
+// Stop and reset the timer
+stopTimer();
+resetTimer();
+// Go back to prestart screen (keep the course selected)
+showScreen('prestart-screen');
+updatePrestartDisplay();
+updatePrestartDurationButtons();
+showStatus('Timer reset - ready to restart', 'status-gps');
+}
+
+function attachTimerBoxPressHandlers() {
+if (timerBoxHandlersAttached) return;
+const box = document.getElementById('trimmer-timer-box');
+if (!box) return;
+box.addEventListener('pointerdown', timerBoxOnPressStart);
+box.addEventListener('pointermove', timerBoxOnPressMove);
+box.addEventListener('pointerup', timerBoxOnPressEnd);
+box.addEventListener('pointercancel', cancelTimerBoxPress);
+box.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+timerBoxHandlersAttached = true;
 }
 
 function trimmerUndoLast() {
