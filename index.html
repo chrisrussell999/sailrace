@@ -592,6 +592,51 @@ font-variant-numeric: tabular-nums;
 line-height: 1;
 }
 
+/* Top timer - prominent display below topbar */
+.trimmer-timer-top {
+background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+border-bottom: 2px solid #2a2a2a;
+padding: 0.6rem 1rem;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 1rem;
+flex-shrink: 0;
+}
+.trimmer-timer-top.idle { opacity: 0.5; }
+.trimmer-timer-top.warning { background: linear-gradient(180deg, #3a2f00 0%, #2a2000 100%); border-color: #6b5500; }
+.trimmer-timer-top.warning .trimmer-timer-top-value { color: #ffcc33; }
+.trimmer-timer-top.danger {
+background: linear-gradient(180deg, #3a0000 0%, #2a0000 100%);
+border-color: #6b0000;
+animation: trimmer-pulse 1s ease-in-out infinite;
+}
+.trimmer-timer-top.danger .trimmer-timer-top-value { color: #ff5252; }
+.trimmer-timer-top.racing {
+background: linear-gradient(180deg, #0a2e0a 0%, #061a06 100%);
+border-color: #2a6a2a;
+animation: none;
+}
+.trimmer-timer-top.racing .trimmer-timer-top-value { color: #66ff88; }
+.trimmer-timer-top.racing .trimmer-timer-top-label::after {
+content: ' · elapsed';
+color: #66ff88;
+}
+.trimmer-timer-top-label {
+font-size: 0.85rem;
+color: #888;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+font-weight: 600;
+}
+.trimmer-timer-top-value {
+font-size: clamp(2.5rem, 12vw, 4rem);
+font-weight: 800;
+font-variant-numeric: tabular-nums;
+line-height: 1;
+color: #fff;
+}
+
 /* Tap hint */
 .trimmer-tap-hint {
 text-align: center;
@@ -811,6 +856,24 @@ letter-spacing: 0.12em;
 text-transform: uppercase;
 font-weight: 600;
 }
+.prestart-map-btn {
+display: block;
+width: 100%;
+background: #1e3a5f;
+border: 1px solid #3a6ea5;
+color: #7ab8ff;
+padding: 0.75rem;
+border-radius: 8px;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+margin: 0.75rem 0;
+touch-action: manipulation;
+}
+.prestart-map-btn:active {
+background: #2a4a6f;
+transform: scale(0.98);
+}
 
 /* Race Summary Screen (Post-Race Strava-like) */
 #race-summary-screen {
@@ -902,6 +965,22 @@ color: #fff;
 }
 .race-summary-btn:active {
 transform: scale(0.98);
+}
+
+/* Finish instruction text */
+.finish-instruction {
+display: none;
+text-align: center;
+color: #ffcc33;
+font-size: 0.9rem;
+font-weight: 600;
+padding: 0.5rem;
+background: rgba(255, 204, 51, 0.1);
+border-radius: 8px;
+margin-top: 0.5rem;
+}
+.finish-instruction.visible {
+display: block;
 }
 
 /* Finish Race Button (appears after last mark) */
@@ -2922,6 +3001,7 @@ Must follow course sequence - no skipping ahead!
 <button class="prestart-btn-stop" onclick="stopTimer()">⏸️ Stop</button>
 <button class="prestart-btn-reset" onclick="resetTimer()">🔄 Reset</button>
 </div>
+<button class="prestart-map-btn" onclick="openTrimmerMapPopup()">🗺️ View Course Map</button>
 <div class="prestart-hint">Starting countdown opens trimmer view</div>
 </div>
 
@@ -2955,6 +3035,10 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="trimmer-topbar-actions">
 <button class="undo-btn" onclick="trimmerUndoLast()">↩ Undo</button>
 </div>
+</div>
+<div class="trimmer-timer-top idle" id="trimmer-timer-top">
+<div class="trimmer-timer-top-label">Race Timer</div>
+<div class="trimmer-timer-top-value" id="trimmer-timer-top-value">—</div>
 </div>
 <div class="trimmer-edge-zone" id="trimmer-edge-zone" onclick="event.stopPropagation(); revealTrimmerBar();"></div>
 <div id="trimmer-tap-area" class="trimmer-tap-area">
@@ -3008,7 +3092,8 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 <div class="trimmer-tap-hint" id="trimmer-tap-hint">Hold anywhere for 1 second to mark passed</div>
-<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">🏁 Finish Race</button>
+<div class="finish-instruction" id="finish-instruction">Head to Finish Line and press button when you cross it</div>
+<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">🏁 Press when finish line crossed</button>
 </div>
 </div>
 
@@ -5404,9 +5489,8 @@ bounds.push(buoy.coords);
 });
 
 
-if (app.userPosition) {
-bounds.push([app.userPosition.latitude, app.userPosition.longitude]);
-}
+// Don't include user GPS position in bounds - only show course marks
+// Boat marker still displays, but map won't be squished by distant position
 
 
 if (bounds.length > 0) {
@@ -5664,8 +5748,9 @@ updateBoatPosition();
 
 
 if (app.currentBuoyIndex >= app.currentCourse.data.length) {
-showStatus('Course completed! 🏆', 'status-gps');
-alert('🏆 Congratulations! Course completed! 🏆\n\nWell done on finishing the course!');
+showStatus('Head to Finish Line', 'status-gps');
+// Show map with breadcrumbs when all marks rounded
+openTrimmerMapPopup(true);
 } else {
 const [nextBuoyName, direction] = app.currentCourse.data[app.currentBuoyIndex];
 const directionText = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard';
@@ -6155,9 +6240,11 @@ sideEl.style.color = '#888';
 setUpcomingEmpty('');
 if (hintEl) { hintEl.textContent = '🏆 Course complete - Press Finish Race below'; hintEl.classList.add('complete'); }
 if (tapArea) tapArea.classList.add('disabled');
-// Show the Finish Race button
+// Show the Finish Race button and instruction
 const finishBtn = document.getElementById('finish-race-btn');
+const finishInstruction = document.getElementById('finish-instruction');
 if (finishBtn) finishBtn.classList.add('visible');
+if (finishInstruction) finishInstruction.classList.add('visible');
 return;
 }
 
@@ -6198,9 +6285,11 @@ sideEl.style.background = '';
 sideEl.style.color = '';
 if (hintEl) { hintEl.textContent = 'Hold anywhere for 1 second to mark passed'; hintEl.classList.remove('complete'); }
 if (tapArea) tapArea.classList.remove('disabled');
-// Hide the Finish Race button while marks remain
+// Hide the Finish Race button and instruction while marks remain
 const finishBtn = document.getElementById('finish-race-btn');
+const finishInstruction = document.getElementById('finish-instruction');
 if (finishBtn) finishBtn.classList.remove('visible');
+if (finishInstruction) finishInstruction.classList.remove('visible');
 
 // Upcoming mark info: name on top, range & bearing from current mark below
 const afterIndex = app.currentBuoyIndex + 1;
@@ -6481,31 +6570,45 @@ spdEl.textContent = values.speed > 0.01 ? values.speed.toFixed(1) : '0.0';
 function updateTrimmerTimer() {
 const valueEl = document.getElementById('trimmer-timer-value');
 const boxEl = document.getElementById('trimmer-timer-box');
-if (!valueEl || !boxEl) return;
+const topValueEl = document.getElementById('trimmer-timer-top-value');
+const topBoxEl = document.getElementById('trimmer-timer-top');
 
+// Helper to apply state to both timers
+function applyState(text, stateClass) {
+if (valueEl) valueEl.textContent = text;
+if (topValueEl) topValueEl.textContent = text;
+if (boxEl) {
 boxEl.classList.remove('idle', 'warning', 'danger', 'racing');
+if (stateClass) boxEl.classList.add(stateClass);
+}
+if (topBoxEl) {
+topBoxEl.classList.remove('idle', 'warning', 'danger', 'racing');
+if (stateClass) topBoxEl.classList.add(stateClass);
+}
+}
 
 // After the countdown finishes, show elapsed time as +M:SS (count-up)
 if (app.timer.currentSeconds === 0 && (app.timer.elapsedSeconds > 0 || app.timer.isRunning)) {
 const el = app.timer.elapsedSeconds || 0;
 const m = Math.floor(el / 60);
 const s = el % 60;
-valueEl.textContent = `+${m}:${s.toString().padStart(2, '0')}`;
-boxEl.classList.add('racing');
+applyState(`+${m}:${s.toString().padStart(2, '0')}`, 'racing');
 return;
 }
 
 const minutes = Math.floor(app.timer.currentSeconds / 60);
 const seconds = app.timer.currentSeconds % 60;
-valueEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+const text = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
+let stateClass = '';
 if (!app.timer.isRunning && app.timer.currentSeconds === app.timer.totalSeconds) {
-boxEl.classList.add('idle');
+stateClass = 'idle';
 } else if (app.timer.currentSeconds <= 60) {
-boxEl.classList.add('danger');
+stateClass = 'danger';
 } else if (app.timer.currentSeconds <= 180) {
-boxEl.classList.add('warning');
+stateClass = 'warning';
 }
+applyState(text, stateClass);
 }
 // ──────── Shared course rendering (matches main navigation map) ────────
 // Draws the course onto any Leaflet map: polyline, buoy markers (using the same
@@ -6659,7 +6762,7 @@ let trimmerPopupBoatMarker = null;
 let trimmerPopupCourseLayers = [];
 let trimmerPopupRefreshTimer = null;
 
-function openTrimmerMapPopup() {
+function openTrimmerMapPopup(showBreadcrumbs) {
 const backdrop = document.getElementById('trimmer-map-backdrop');
 const canvas = document.getElementById('trimmer-map-canvas');
 const nameEl = document.getElementById('trimmer-map-course-name');
@@ -6698,7 +6801,7 @@ updateWhenZooming: false
 trimmerPopupMap.invalidateSize();
 }
 
-renderTrimmerPopupCourse();
+renderTrimmerPopupCourse(showBreadcrumbs);
 
 // Lightweight live updates while popup is open
 if (trimmerPopupRefreshTimer) clearInterval(trimmerPopupRefreshTimer);
@@ -6716,7 +6819,7 @@ trimmerPopupRefreshTimer = null;
 }
 }
 
-function renderTrimmerPopupCourse() {
+function renderTrimmerPopupCourse(showBreadcrumbs) {
 if (!trimmerPopupMap) return;
 
 // Clear previous course layers
@@ -6727,9 +6830,8 @@ trimmerPopupCourseLayers = [];
 
 if (!app.currentCourse) return;
 
-const includePos = app.userPosition
-? [app.userPosition.latitude, app.userPosition.longitude]
-: null;
+// Don't include GPS in bounds - only show course marks
+const includePos = null;
 
 trimmerPopupCourseLayers = renderCourseLayers(trimmerPopupMap, app.currentCourse, {
 completedBuoys: app.completedBuoys,
@@ -6739,6 +6841,19 @@ fitBounds: true,
 padding: [40, 40],
 maxZoom: 15
 });
+
+// Add breadcrumb track if requested (shows sailed path)
+if (showBreadcrumbs && app.raceTrack && app.raceTrack.length > 1) {
+const trackCoords = app.raceTrack.map(p => [p.lat, p.lng]);
+const trackLine = L.polyline(trackCoords, {
+color: '#ff6b35',
+weight: 5,
+opacity: 0.9,
+lineCap: 'round',
+lineJoin: 'round'
+}).addTo(trimmerPopupMap);
+trimmerPopupCourseLayers.push(trackLine);
+}
 }
 
 function updateTrimmerPopupPosition() {
