@@ -4420,10 +4420,17 @@ const sortedCourseNames = Object.keys(predefinedCourses).sort();
 // );
 
 // NEW CODE - only shows courses starting with the typed letter:
-const filteredCourses = sortedCourseNames.filter(courseName =>
-courseName.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-formatCoursePreview(predefinedCourses[courseName]).toLowerCase().includes(searchTerm.toLowerCase())
-);
+// For short searches (1-2 chars), only match course name prefix (e.g., "G" shows G1-G8)
+// For longer searches (3+ chars), also search buoy names in preview
+const filteredCourses = sortedCourseNames.filter(courseName => {
+const term = searchTerm.toLowerCase();
+const nameMatches = courseName.toLowerCase().startsWith(term);
+if (term.length <= 2) {
+  return nameMatches;
+}
+const previewMatches = formatCoursePreview(predefinedCourses[courseName]).toLowerCase().includes(term);
+return nameMatches || previewMatches;
+});
 
 
 dropdown.innerHTML = '';
