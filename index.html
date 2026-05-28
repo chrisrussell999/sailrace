@@ -983,6 +983,61 @@ margin-top: 0.5rem;
 display: block;
 }
 
+/* Head to Finish Overlay */
+.head-to-finish-overlay {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.9);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+z-index: 9999;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+}
+.head-to-finish-overlay.active {
+opacity: 1;
+pointer-events: auto;
+}
+.head-to-finish-overlay .finish-icon {
+font-size: 5rem;
+margin-bottom: 1rem;
+animation: bounce-flag 0.6s ease infinite;
+}
+@keyframes bounce-flag {
+0%, 100% { transform: translateY(0); }
+50% { transform: translateY(-10px); }
+}
+.head-to-finish-overlay .finish-title {
+font-size: 2.5rem;
+font-weight: 800;
+color: #66ff88;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+margin-bottom: 0.5rem;
+text-align: center;
+}
+.head-to-finish-overlay .finish-subtitle {
+font-size: 1.2rem;
+color: #aaa;
+text-align: center;
+margin-bottom: 2rem;
+}
+.head-to-finish-overlay .finish-dismiss {
+background: #333;
+border: 1px solid #555;
+color: #fff;
+padding: 1rem 2rem;
+border-radius: 8px;
+font-size: 1rem;
+cursor: pointer;
+}
+
 /* Finish Race Button (appears after last mark) */
 .finish-race-btn {
 display: none;
@@ -3097,6 +3152,14 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 
+<!-- Head to Finish Overlay -->
+<div id="head-to-finish-overlay" class="head-to-finish-overlay">
+<div class="finish-icon">🏁</div>
+<div class="finish-title">Head to Finish!</div>
+<div class="finish-subtitle">All marks rounded - sail to the finish line</div>
+<button class="finish-dismiss" onclick="dismissHeadToFinishOverlay()">OK - Got it!</button>
+</div>
+
 <!-- Exit Race Confirmation Modal -->
 
 <div id="exit-confirm-backdrop" class="exit-confirm-backdrop">
@@ -3172,7 +3235,11 @@ onclick="clearModalCourseSelection()"
 <div class="race-summary-stats">
 <div class="race-stat">
 <div class="race-stat-value" id="race-total-time">--:--</div>
-<div class="race-stat-label">Total Time</div>
+<div class="race-stat-label">Elapsed Time</div>
+</div>
+<div class="race-stat">
+<div class="race-stat-value" id="race-finish-time">--:--</div>
+<div class="race-stat-label">Finish Time</div>
 </div>
 <div class="race-stat">
 <div class="race-stat-value" id="race-distance">--</div>
@@ -5748,9 +5815,8 @@ updateBoatPosition();
 
 
 if (app.currentBuoyIndex >= app.currentCourse.data.length) {
-showStatus('Head to Finish Line', 'status-gps');
-// Show map with breadcrumbs when all marks rounded
-openTrimmerMapPopup(true);
+// Flash prominent "Head to Finish" message
+showHeadToFinishOverlay();
 } else {
 const [nextBuoyName, direction] = app.currentCourse.data[app.currentBuoyIndex];
 const directionText = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard';
@@ -6314,6 +6380,25 @@ setUpcomingEmpty('Finish next');
 }
 }
 
+// ── Head to Finish Overlay ────────────────────────────────────────────────────
+function showHeadToFinishOverlay() {
+const overlay = document.getElementById('head-to-finish-overlay');
+if (overlay) {
+overlay.classList.add('active');
+// Vibrate to get attention
+if (navigator.vibrate) { try { navigator.vibrate([100, 50, 100, 50, 200]); } catch (e) {} }
+}
+// Also update the trimmer display
+updateTrimmerMark();
+}
+
+function dismissHeadToFinishOverlay() {
+const overlay = document.getElementById('head-to-finish-overlay');
+if (overlay) {
+overlay.classList.remove('active');
+}
+}
+
 // ── Race Summary Functions (Post-Race Strava-like) ────────────────────────────
 function finishRace() {
 if (app.raceFinished) return;
@@ -6354,8 +6439,13 @@ const distanceNM = (totalDistance / 1852).toFixed(2);
 // Calculate average speed
 const avgSpeedKts = totalTimeMs > 0 ? (totalDistance / 1852) / (totalTimeMs / 3600000) : 0;
 
+// Format finish time as HH:MM:SS
+const finishDate = new Date(app.raceFinishTime);
+const finishTimeStr = finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
 // Update summary display
 document.getElementById('race-total-time').textContent = timeString;
+document.getElementById('race-finish-time').textContent = finishTimeStr;
 document.getElementById('race-distance').textContent = distanceNM;
 document.getElementById('race-avg-speed').textContent = avgSpeedKts.toFixed(1);
 document.getElementById('race-summary-course').textContent = `Course: ${app.currentCourse ? app.currentCourse.name : 'Unknown'}`;
