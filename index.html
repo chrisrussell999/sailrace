@@ -6231,14 +6231,14 @@ remainingEl.textContent = remaining;
 
 if (app.currentBuoyIndex >= app.currentCourse.data.length) {
 nameEl.textContent = 'FINISH';
-if (fullnameEl) fullnameEl.textContent = 'Race Complete';
+if (fullnameEl) fullnameEl.textContent = 'Head to Finish Line!';
 if (colorEl) { colorEl.textContent = ''; colorEl.style.display = 'none'; }
-sideEl.textContent = 'Course Complete';
+sideEl.textContent = 'All Marks Rounded';
 sideEl.className = 'trimmer-mark-side';
-sideEl.style.background = '#1a1a1a';
-sideEl.style.color = '#888';
+sideEl.style.background = '#2a5a2a';
+sideEl.style.color = '#66ff88';
 setUpcomingEmpty('');
-if (hintEl) { hintEl.textContent = '🏆 Course complete - Press Finish Race below'; hintEl.classList.add('complete'); }
+if (hintEl) { hintEl.textContent = 'Press Finish Race when you cross the finish line'; hintEl.classList.add('complete'); }
 if (tapArea) tapArea.classList.add('disabled');
 // Show the Finish Race button and instruction
 const finishBtn = document.getElementById('finish-race-btn');
