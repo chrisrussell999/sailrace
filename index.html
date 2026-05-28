@@ -4413,8 +4413,15 @@ if (!dropdown) return;
 const sortedCourseNames = Object.keys(predefinedCourses).sort();
 
 
+// OLD CODE - shows all courses containing the letter anywhere:
+// const filteredCourses = sortedCourseNames.filter(courseName =>
+// courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+// formatCoursePreview(predefinedCourses[courseName]).toLowerCase().includes(searchTerm.toLowerCase())
+// );
+
+// NEW CODE - only shows courses starting with the typed letter:
 const filteredCourses = sortedCourseNames.filter(courseName =>
-courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+courseName.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
 formatCoursePreview(predefinedCourses[courseName]).toLowerCase().includes(searchTerm.toLowerCase())
 );
 
