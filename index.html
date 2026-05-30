@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -1062,6 +1063,94 @@ animation: pulse-finish 2s infinite;
 @keyframes pulse-finish {
 0%, 100% { box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); }
 50% { box-shadow: 0 4px 25px rgba(76, 175, 80, 0.7); }
+}
+
+/* Finish Result Modal (intermediate screen before full overview) */
+.finish-result-overlay {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.95);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+z-index: 9999;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+}
+.finish-result-overlay.active {
+opacity: 1;
+pointer-events: auto;
+}
+.finish-result-icon {
+font-size: 4rem;
+margin-bottom: 1rem;
+animation: bounce-flag 0.6s ease infinite;
+}
+.finish-result-title {
+font-size: 2rem;
+font-weight: 800;
+color: #66ff88;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+margin-bottom: 2rem;
+text-align: center;
+}
+.finish-result-stats {
+display: flex;
+flex-direction: column;
+gap: 1.5rem;
+margin-bottom: 2rem;
+width: 80%;
+max-width: 300px;
+}
+.finish-result-stat {
+text-align: center;
+background: rgba(255, 255, 255, 0.05);
+padding: 1rem;
+border-radius: 12px;
+}
+.finish-result-stat-value {
+font-size: 2.5rem;
+font-weight: 700;
+color: #fff;
+font-family: 'Courier New', monospace;
+}
+.finish-result-stat-label {
+font-size: 0.9rem;
+color: #888;
+text-transform: uppercase;
+margin-top: 0.25rem;
+}
+.finish-result-actions {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+width: 80%;
+max-width: 300px;
+}
+.finish-result-btn {
+padding: 1rem 2rem;
+border-radius: 10px;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+border: none;
+text-transform: uppercase;
+}
+.finish-result-btn.primary {
+background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+color: #fff;
+box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+.finish-result-btn.secondary {
+background: #333;
+color: #fff;
+border: 1px solid #555;
 }
 
 /* Home Screen */
@@ -3147,7 +3236,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 <div class="trimmer-tap-hint" id="trimmer-tap-hint">Hold anywhere for 1 second to mark passed</div>
-<div class="finish-instruction" id="finish-instruction">Head to Finish Line and press button when you cross it</div>
+<div class="finish-instruction" id="finish-instruction">Proceed to finish line upwind - press button when you cross it</div>
 <button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">🏁 Press when finish line crossed</button>
 </div>
 </div>
@@ -3155,9 +3244,29 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <!-- Head to Finish Overlay -->
 <div id="head-to-finish-overlay" class="head-to-finish-overlay">
 <div class="finish-icon">🏁</div>
-<div class="finish-title">Head to Finish!</div>
-<div class="finish-subtitle">All marks rounded - sail to the finish line</div>
+<div class="finish-title">Proceed to Finish!</div>
+<div class="finish-subtitle">Sail upwind to the finish line and press the button when you cross it</div>
 <button class="finish-dismiss" onclick="dismissHeadToFinishOverlay()">OK - Got it!</button>
+</div>
+
+<!-- Finish Result Overlay (intermediate screen showing times) -->
+<div id="finish-result-overlay" class="finish-result-overlay">
+<div class="finish-result-icon">🏁</div>
+<div class="finish-result-title">Race Finished!</div>
+<div class="finish-result-stats">
+<div class="finish-result-stat">
+<div class="finish-result-stat-value" id="finish-elapsed-time">--:--</div>
+<div class="finish-result-stat-label">Elapsed Time</div>
+</div>
+<div class="finish-result-stat">
+<div class="finish-result-stat-value" id="finish-exact-time">--:--:--</div>
+<div class="finish-result-stat-label">Finish Time</div>
+</div>
+</div>
+<div class="finish-result-actions">
+<button class="finish-result-btn primary" onclick="showFullRaceOverview()">📊 View Race Overview</button>
+<button class="finish-result-btn secondary" onclick="closeFinishResult()">🏠 Done</button>
+</div>
 </div>
 
 <!-- Exit Race Confirmation Modal -->
@@ -6417,7 +6526,53 @@ trackPoints: app.raceTrack.length,
 duration: app.raceFinishTime - app.raceStartTime
 });
 
+// Show intermediate finish result with elapsed/exact times
+showFinishResult();
+}
+
+function showFinishResult() {
+// Calculate elapsed time
+const totalTimeMs = app.raceFinishTime - app.raceStartTime;
+const totalMinutes = Math.floor(totalTimeMs / 60000);
+const totalSeconds = Math.floor((totalTimeMs % 60000) / 1000);
+const elapsedString = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+
+// Format exact finish time as HH:MM:SS
+const finishDate = new Date(app.raceFinishTime);
+const exactTimeString = finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+// Update the overlay display
+document.getElementById('finish-elapsed-time').textContent = elapsedString;
+document.getElementById('finish-exact-time').textContent = exactTimeString;
+
+// Show the finish result overlay
+const overlay = document.getElementById('finish-result-overlay');
+if (overlay) {
+overlay.classList.add('active');
+// Vibrate to celebrate finish
+if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200, 100, 400]); } catch (e) {} }
+}
+}
+
+function showFullRaceOverview() {
+// Hide the finish result overlay
+const overlay = document.getElementById('finish-result-overlay');
+if (overlay) {
+overlay.classList.remove('active');
+}
+// Show the full Strava-like race summary
 showRaceSummary();
+}
+
+function closeFinishResult() {
+// Hide the finish result overlay
+const overlay = document.getElementById('finish-result-overlay');
+if (overlay) {
+overlay.classList.remove('active');
+}
+// Go back to home screen
+showScreen('home-screen');
+resetRaceState();
 }
 
 function showRaceSummary() {
