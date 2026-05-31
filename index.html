@@ -1,5 +1,5 @@
 
-<!DOCTYPE html>
+    how <!DOCTYPE html>
 
 <html lang="en">
 <head>
@@ -795,6 +795,18 @@ color: #fff;
 .prestart-btn-reset {
 background: #2b2b2b;
 color: #ccc;
+}
+.prestart-btn-sync {
+background: #ff9800;
+color: #fff;
+border-color: #ff9800;
+}
+.prestart-btn-sync:disabled {
+background: #444;
+color: #777;
+border-color: #444;
+cursor: not-allowed;
+opacity: 0.5;
 }
 .prestart-nav-box {
 background: #111;
@@ -2187,6 +2199,19 @@ border: 1px solid var(--border-color);
 }
 
 
+.timer-btn.sync {
+background: #ff9800;
+color: white;
+}
+
+.timer-btn.sync:disabled {
+background: #666;
+color: #999;
+cursor: not-allowed;
+opacity: 0.5;
+}
+
+
 @media (max-width: 480px) {
 .timer-display {
 font-size: 6rem;
@@ -2910,6 +2935,7 @@ Fix for Pixel 8 / Android:
 <button id="timer-10min-btn" class="timer-duration-btn active" onclick="setTimerDuration(600)">10:00</button>
 <button id="timer-6min-btn" class="timer-duration-btn" onclick="setTimerDuration(360)">6:00</button>
 <button id="timer-5min-btn" class="timer-duration-btn" onclick="setTimerDuration(300)">5:00</button>
+<button id="timer-1min-btn" class="timer-duration-btn" onclick="setTimerDuration(60)">1:00</button>
 
 </div>
 
@@ -2918,6 +2944,7 @@ Fix for Pixel 8 / Android:
 <button id="timer-start-btn" class="timer-btn start" onclick="startTimer()">▶️ Start</button>
 <button id="timer-stop-btn" class="timer-btn stop" onclick="stopTimer()" disabled>⏸️ Stop</button>
 <button id="timer-reset-btn" class="timer-btn reset" onclick="resetTimer()">🔄 Reset</button>
+<button id="timer-sync-btn" class="timer-btn sync" onclick="syncTimer()" disabled>🔄 Sync</button>
 </div>
 </div>
 </div>
@@ -3139,11 +3166,13 @@ Must follow course sequence - no skipping ahead!
 <button class="prestart-duration-btn active" data-dur="600" onclick="setTimerDuration(600)">10:00</button>
 <button class="prestart-duration-btn" data-dur="360" onclick="setTimerDuration(360)">6:00</button>
 <button class="prestart-duration-btn" data-dur="300" onclick="setTimerDuration(300)">5:00</button>
+<button class="prestart-duration-btn" data-dur="60" onclick="setTimerDuration(60)">1:00</button>
 </div>
 <div class="prestart-controls">
 <button id="prestart-start-btn" class="prestart-btn-start" onclick="startTimer()">▶️ Start Countdown</button>
 <button class="prestart-btn-stop" onclick="stopTimer()">⏸️ Stop</button>
 <button class="prestart-btn-reset" onclick="resetTimer()">🔄 Reset</button>
+<button id="prestart-sync-btn" class="prestart-btn-sync" onclick="syncTimer()" disabled>🔄 Sync</button>
 </div>
 <button class="prestart-map-btn" onclick="openTrimmerMapPopup()">🗺️ View Course Map</button>
 <div class="prestart-hint">Starting countdown opens trimmer view</div>
@@ -3476,6 +3505,7 @@ document.getElementById('timer-15min-btn').classList.toggle('active', seconds ==
 document.getElementById('timer-10min-btn').classList.toggle('active', seconds === 600);
 document.getElementById('timer-6min-btn').classList.toggle('active', seconds === 360);
 document.getElementById('timer-5min-btn').classList.toggle('active', seconds === 300);
+document.getElementById('timer-1min-btn').classList.toggle('active', seconds === 60);
 
 
 // Mirror to pre-start duration buttons
@@ -3495,6 +3525,7 @@ case 900: durationText = '15:00'; break;
 case 600: durationText = '10:00'; break;
 case 360: durationText = '6:00'; break;
 case 300: durationText = '5:00'; break;
+case 60: durationText = '1:00'; break;
 default: durationText = `${Math.floor(seconds/60)}:${(seconds%60).toString().padStart(2,'0')}`;
 }
 showStatus(`⏱️ Timer set to ${durationText}`, 'status-gps');
@@ -3594,6 +3625,10 @@ if (navigator.vibrate) {
 navigator.vibrate([200, 100, 200, 100, 200]);
 }
 
+// Disable sync button - race has started
+document.getElementById('timer-sync-btn').disabled = true;
+const prestartSyncBtnRace = document.getElementById('prestart-sync-btn');
+if (prestartSyncBtnRace) prestartSyncBtnRace.disabled = true;
 
 showStatus('🏁 Start! Race timer is now counting elapsed time.', 'status-gps');
 }
@@ -3603,6 +3638,9 @@ showStatus('🏁 Start! Race timer is now counting elapsed time.', 'status-gps')
 // Update buttons
 document.getElementById('timer-start-btn').disabled = true;
 document.getElementById('timer-stop-btn').disabled = false;
+document.getElementById('timer-sync-btn').disabled = false;
+const prestartSyncBtn = document.getElementById('prestart-sync-btn');
+if (prestartSyncBtn) prestartSyncBtn.disabled = false;
 
 
 showStatus('⏱️ Timer started', 'status-gps');
@@ -3625,6 +3663,9 @@ app.timer.interval = null;
 // Update buttons
 document.getElementById('timer-start-btn').disabled = false;
 document.getElementById('timer-stop-btn').disabled = true;
+document.getElementById('timer-sync-btn').disabled = true;
+const prestartSyncBtn = document.getElementById('prestart-sync-btn');
+if (prestartSyncBtn) prestartSyncBtn.disabled = true;
 
 
 if (app.timer.currentSeconds > 0) {
@@ -3650,10 +3691,59 @@ updateTimerDisplay();
 // Reset buttons
 document.getElementById('timer-start-btn').disabled = false;
 document.getElementById('timer-stop-btn').disabled = true;
+document.getElementById('timer-sync-btn').disabled = true;
+const prestartSyncBtnReset = document.getElementById('prestart-sync-btn');
+if (prestartSyncBtnReset) prestartSyncBtnReset.disabled = true;
 
 
-const durationText = app.timer.totalSeconds === 600 ? '10:00' : '5:00';
+const mins = Math.floor(app.timer.totalSeconds / 60);
+const secs = app.timer.totalSeconds % 60;
+const durationText = `${mins}:${secs.toString().padStart(2, '0')}`;
 showStatus(`🔄 Timer reset to ${durationText}`, 'status-gps');
+}
+
+
+function syncTimer() {
+// Sync rounds current time to nearest minute
+// Only works while timer is running in countdown phase
+if (!app.timer.isRunning) {
+showStatus('▶️ Start timer before syncing', 'status-gps');
+return;
+}
+
+if (app.timer.currentSeconds === 0) {
+showStatus('🏁 Already racing - sync not available', 'status-gps');
+return;
+}
+
+const currentSecs = app.timer.currentSeconds;
+const remainderSecs = currentSecs % 60;
+
+// Round to nearest minute: >= 30 seconds rounds up, < 30 rounds down
+let syncedSeconds;
+if (remainderSecs >= 30) {
+// Round up to next minute
+syncedSeconds = currentSecs + (60 - remainderSecs);
+} else {
+// Round down to current minute
+syncedSeconds = currentSecs - remainderSecs;
+}
+
+// Don't sync to 0 or negative
+if (syncedSeconds <= 0) {
+syncedSeconds = 60; // Minimum 1 minute
+}
+
+// Calculate new totalSeconds to maintain correct elapsed calculation
+const elapsedSoFar = Math.floor((Date.now() - app.timer.startTime) / 1000);
+app.timer.totalSeconds = syncedSeconds + elapsedSoFar;
+app.timer.currentSeconds = syncedSeconds;
+
+updateTimerDisplay();
+
+const mins = Math.floor(syncedSeconds / 60);
+const secs = syncedSeconds % 60;
+showStatus(`🔄 Synced to ${mins}:${secs.toString().padStart(2, '0')}`, 'status-gps');
 }
 
 
