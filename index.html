@@ -1071,30 +1071,37 @@ font-size: 1rem;
 cursor: pointer;
 }
 
-/* Finish Race Button (appears after last mark) */
+/* Finish Race Button (appears after last mark) - checkered flag style */
 .finish-race-btn {
 display: none;
 width: 100%;
 padding: 1.2rem;
 font-size: 1.3rem;
 font-weight: 700;
-background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
-color: #fff;
-border: none;
+background:
+repeating-conic-gradient(#000 0% 25%, #fff 0% 50%)
+50% / 20px 20px;
+color: #000;
+border: 3px solid #000;
 border-radius: 12px;
 cursor: pointer;
 text-transform: uppercase;
 letter-spacing: 0.1em;
-box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 margin-top: 1rem;
+text-shadow:
+-1px -1px 0 #fff,
+1px -1px 0 #fff,
+-1px 1px 0 #fff,
+1px 1px 0 #fff;
 }
 .finish-race-btn.visible {
 display: block;
 animation: pulse-finish 2s infinite;
 }
 @keyframes pulse-finish {
-0%, 100% { box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); }
-50% { box-shadow: 0 4px 25px rgba(76, 175, 80, 0.7); }
+0%, 100% { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
+50% { box-shadow: 0 4px 25px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.5); }
 }
 
 /* Finish Result Modal (intermediate screen before full overview) */
@@ -3286,17 +3293,16 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 <div class="trimmer-tap-hint" id="trimmer-tap-hint">Hold anywhere for 1 second to mark passed</div>
-<div class="finish-instruction" id="finish-instruction">Proceed to finish line upwind - press button when you cross it</div>
-<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">🏁 Press when finish line crossed</button>
+<div class="finish-instruction" id="finish-instruction">Proceed to finish line</div>
+<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">Press when finish line crossed</button>
 </div>
 </div>
 
 <!-- Head to Finish Overlay -->
 <div id="head-to-finish-overlay" class="head-to-finish-overlay">
-<div class="finish-icon">🏁</div>
-<div class="finish-title">Proceed to Finish!</div>
-<div class="finish-subtitle">Sail upwind to the finish line and press the button when you cross it</div>
-<button class="finish-dismiss" onclick="dismissHeadToFinishOverlay()">OK - Got it!</button>
+<div class="finish-title">Proceed to Finish Line</div>
+<div class="finish-subtitle">Press the checkered button when you cross it</div>
+<button class="finish-dismiss" onclick="dismissHeadToFinishOverlay()">OK</button>
 </div>
 
 <!-- Finish Result Overlay (intermediate screen showing times) -->
