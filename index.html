@@ -593,6 +593,26 @@ font-variant-numeric: tabular-nums;
 line-height: 1;
 }
 
+/* Trimmer sync button */
+.trimmer-sync-btn {
+background: #ff9800;
+color: white;
+border: none;
+border-radius: 8px;
+padding: 0.5rem 1rem;
+font-size: 1rem;
+font-weight: 700;
+cursor: pointer;
+margin-top: 0.5rem;
+touch-action: manipulation;
+}
+.trimmer-sync-btn:disabled {
+background: #444;
+color: #666;
+cursor: not-allowed;
+opacity: 0.5;
+}
+
 /* Top timer - prominent display below topbar */
 .trimmer-timer-top {
 background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
@@ -3263,6 +3283,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="trimmer-timer-label">Race Timer</div>
 <div class="trimmer-timer-value" id="trimmer-timer-value">—</div>
 </div>
+<button id="trimmer-sync-btn" class="trimmer-sync-btn" onclick="syncTimer()" disabled>Sync</button>
 </div>
 <div class="trimmer-tap-hint" id="trimmer-tap-hint">Hold anywhere for 1 second to mark passed</div>
 <div class="finish-instruction" id="finish-instruction">Proceed to finish line upwind - press button when you cross it</div>
@@ -3625,8 +3646,9 @@ if (navigator.vibrate) {
 navigator.vibrate([200, 100, 200, 100, 200]);
 }
 
-// Disable sync button - race has started
+// Disable sync buttons - race has started
 document.getElementById('timer-sync-btn').disabled = true;
+document.getElementById('trimmer-sync-btn').disabled = true;
 const prestartSyncBtnRace = document.getElementById('prestart-sync-btn');
 if (prestartSyncBtnRace) prestartSyncBtnRace.disabled = true;
 
@@ -3639,6 +3661,7 @@ showStatus('🏁 Start! Race timer is now counting elapsed time.', 'status-gps')
 document.getElementById('timer-start-btn').disabled = true;
 document.getElementById('timer-stop-btn').disabled = false;
 document.getElementById('timer-sync-btn').disabled = false;
+document.getElementById('trimmer-sync-btn').disabled = false;
 const prestartSyncBtn = document.getElementById('prestart-sync-btn');
 if (prestartSyncBtn) prestartSyncBtn.disabled = false;
 
@@ -3664,6 +3687,7 @@ app.timer.interval = null;
 document.getElementById('timer-start-btn').disabled = false;
 document.getElementById('timer-stop-btn').disabled = true;
 document.getElementById('timer-sync-btn').disabled = true;
+document.getElementById('trimmer-sync-btn').disabled = true;
 const prestartSyncBtn = document.getElementById('prestart-sync-btn');
 if (prestartSyncBtn) prestartSyncBtn.disabled = true;
 
@@ -3692,6 +3716,7 @@ updateTimerDisplay();
 document.getElementById('timer-start-btn').disabled = false;
 document.getElementById('timer-stop-btn').disabled = true;
 document.getElementById('timer-sync-btn').disabled = true;
+document.getElementById('trimmer-sync-btn').disabled = true;
 const prestartSyncBtnReset = document.getElementById('prestart-sync-btn');
 if (prestartSyncBtnReset) prestartSyncBtnReset.disabled = true;
 
