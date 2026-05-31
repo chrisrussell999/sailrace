@@ -8014,6 +8014,9 @@ app.userPosition.latitude, app.userPosition.longitude
 const groundSpeedMS = distanceMoved / timeElapsedSeconds;
 vesselSpeed = groundSpeedMS * 1.94384; // Convert to knots
 
+// Sanity check - cap at 40 knots (GPS jumps can cause huge values)
+if (vesselSpeed > 40) vesselSpeed = 0;
+
 
 // Add to speed history for smoothing
 app.speedHistory.push(vesselSpeed);
@@ -8052,8 +8055,10 @@ const cmgSpeedMS = groundSpeedMS * Math.cos(bearingDifference * Math.PI / 180);
 
 
 // Convert to knots - allow negative values
-const cmgSpeedKnots = cmgSpeedMS * 1.94384;
+let cmgSpeedKnots = cmgSpeedMS * 1.94384;
 
+// Sanity check - cap CMG at reasonable sailboat speed
+if (Math.abs(cmgSpeedKnots) > 40) cmgSpeedKnots = 0;
 
 // Apply smoothing to CMG
 app.cmgSpeed = (app.cmgSpeed * 0.3) + (cmgSpeedKnots * 0.7);
