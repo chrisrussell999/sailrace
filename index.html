@@ -6397,6 +6397,8 @@ timerBoxPressPointerId = null;
 
 function timerBoxOnPressStart(e) {
 if (timerBoxPressPointerId !== null) return;
+// Don't capture sync button clicks
+if (e.target && e.target.id === 'trimmer-sync-btn') return;
 try { e.preventDefault(); } catch (err) {}
 
 timerBoxPressPointerId = e.pointerId != null ? e.pointerId : 'mouse';
