@@ -908,6 +908,133 @@ background: #2a4a6f;
 transform: scale(0.98);
 }
 
+/* Start Line Pins UI (CV Starts) */
+.startline-box {
+background: #111;
+border: 2px solid #444;
+border-radius: 14px;
+padding: 1rem;
+display: none;
+}
+.startline-box.visible {
+display: block;
+}
+.startline-box.has-line {
+border-color: #4caf50;
+}
+.startline-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 0.75rem;
+}
+.startline-title {
+font-size: 0.85rem;
+font-weight: 700;
+color: #aaa;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+.startline-clear-btn {
+background: #333;
+border: 1px solid #555;
+color: #aaa;
+font-size: 0.75rem;
+padding: 0.3rem 0.6rem;
+border-radius: 6px;
+cursor: pointer;
+}
+.startline-clear-btn:active {
+background: #444;
+}
+.startline-pins {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.5rem;
+margin-bottom: 0.75rem;
+}
+.startline-pin-btn {
+padding: 0.8rem 0.5rem;
+border-radius: 10px;
+font-size: 0.9rem;
+font-weight: 700;
+cursor: pointer;
+text-align: center;
+transition: all 0.2s ease;
+}
+.startline-pin-btn.pin-end {
+background: #2d2d1a;
+border: 2px solid #666622;
+color: #cccc44;
+}
+.startline-pin-btn.pin-end.dropped {
+background: #1a2d1a;
+border-color: #4caf50;
+color: #4caf50;
+}
+.startline-pin-btn.cv-end {
+background: #2d1a1a;
+border: 2px solid #664422;
+color: #cc8844;
+}
+.startline-pin-btn.cv-end.dropped {
+background: #1a2d1a;
+border-color: #4caf50;
+color: #4caf50;
+}
+.startline-pin-btn:active {
+transform: scale(0.97);
+}
+.startline-pin-btn .pin-label {
+font-size: 0.7rem;
+opacity: 0.7;
+margin-top: 0.2rem;
+}
+.startline-distances {
+display: none;
+grid-template-columns: 1fr 1fr;
+gap: 0.5rem;
+}
+.startline-distances.visible {
+display: grid;
+}
+.startline-dist {
+background: #1a1a1a;
+border-radius: 10px;
+padding: 0.6rem;
+text-align: center;
+}
+.startline-dist .dist-label {
+font-size: 0.7rem;
+color: #888;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+margin-bottom: 0.3rem;
+}
+.startline-dist .dist-value {
+font-size: 1.3rem;
+font-weight: 800;
+font-variant-numeric: tabular-nums;
+}
+.startline-dist .dist-time {
+font-size: 0.9rem;
+font-weight: 600;
+margin-top: 0.2rem;
+color: #66ccff;
+}
+.startline-dist.pin-end .dist-value { color: #cccc44; }
+.startline-dist.cv-end .dist-value { color: #cc8844; }
+.startline-line-bearing {
+text-align: center;
+margin-top: 0.5rem;
+font-size: 0.8rem;
+color: #888;
+}
+.startline-line-bearing strong {
+color: #fff;
+font-weight: 700;
+}
+
 /* Race Summary Screen (Post-Race Strava-like) */
 #race-summary-screen {
 padding: 0;
@@ -3219,6 +3346,36 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="pn-label">Bearing</div>
 </div>
 </div>
+
+<div class="startline-box" id="startline-box">
+<div class="startline-header">
+<span class="startline-title">📍 Start Line</span>
+<button class="startline-clear-btn" onclick="clearStartLine()">Clear</button>
+</div>
+<div class="startline-pins">
+<button class="startline-pin-btn pin-end" id="pin-end-btn" onclick="dropPinEnd()">
+<div>📌 Pin End</div>
+<div class="pin-label" id="pin-end-status">Tap to drop</div>
+</button>
+<button class="startline-pin-btn cv-end" id="cv-end-btn" onclick="dropCVEnd()">
+<div>🚤 CV End</div>
+<div class="pin-label" id="cv-end-status">Tap to drop</div>
+</button>
+</div>
+<div class="startline-distances" id="startline-distances">
+<div class="startline-dist pin-end">
+<div class="dist-label">To Pin</div>
+<div class="dist-value" id="startline-pin-dist">—</div>
+<div class="dist-time" id="startline-pin-time">—</div>
+</div>
+<div class="startline-dist cv-end">
+<div class="dist-label">To CV</div>
+<div class="dist-value" id="startline-cv-dist">—</div>
+<div class="dist-time" id="startline-cv-time">—</div>
+</div>
+</div>
+<div class="startline-line-bearing" id="startline-bearing-info"></div>
+</div>
 </div>
 </div>
 
@@ -3488,6 +3645,11 @@ raceStartTime: null,
 raceFinishTime: null,
 raceFinished: false,
 raceStartPosition: null, // GPS position at race start
+// Start line pins for CV starts
+startLine: {
+pinEnd: null,   // { lat, lng, droppedAt }
+cvEnd: null     // { lat, lng, droppedAt }
+}
 // Settings for map controls visibility
 settings: {
 showDebugButton: false,
@@ -4591,6 +4753,10 @@ if (searchInput) searchInput.value = '';
 if (typeof updateDropdown === 'function') {
 updateDropdown('');
 }
+
+// Update start line visibility and clear pins when switching sets
+if (typeof clearStartLine === 'function') clearStartLine();
+if (typeof updateStartLineVisibility === 'function') updateStartLineVisibility();
 }
 
 
@@ -6069,6 +6235,9 @@ return;
 showScreen('prestart-screen');
 updatePrestartDisplay();
 updatePrestartDurationButtons();
+updateStartLineVisibility();
+updateStartLinePinButtons();
+updateStartLineDisplay();
 requestWakeLock();
 }
 
@@ -6131,6 +6300,181 @@ if (dur === app.timer.totalSeconds) b.classList.add('active');
 else b.classList.remove('active');
 });
 }
+
+// ── Start Line Pin Functions (CV Starts) ──────────────────────────────
+function isCVStart() {
+return typeof activeCourseSet !== 'undefined' && activeCourseSet.includes('CV');
+}
+
+function updateStartLineVisibility() {
+const box = document.getElementById('startline-box');
+if (!box) return;
+if (isCVStart()) {
+box.classList.add('visible');
+} else {
+box.classList.remove('visible');
+}
+}
+
+function dropPinEnd() {
+if (!app.userPosition) {
+showStatus('GPS position not available', 'status-gps');
+return;
+}
+app.startLine.pinEnd = {
+lat: app.userPosition.latitude,
+lng: app.userPosition.longitude,
+droppedAt: Date.now()
+};
+updateStartLinePinButtons();
+updateStartLineDisplay();
+showStatus('📌 Pin end dropped', 'status-gps');
+if ('vibrate' in navigator) navigator.vibrate(50);
+}
+
+function dropCVEnd() {
+if (!app.userPosition) {
+showStatus('GPS position not available', 'status-gps');
+return;
+}
+app.startLine.cvEnd = {
+lat: app.userPosition.latitude,
+lng: app.userPosition.longitude,
+droppedAt: Date.now()
+};
+updateStartLinePinButtons();
+updateStartLineDisplay();
+showStatus('🚤 CV end dropped', 'status-gps');
+if ('vibrate' in navigator) navigator.vibrate(50);
+}
+
+function clearStartLine() {
+app.startLine.pinEnd = null;
+app.startLine.cvEnd = null;
+updateStartLinePinButtons();
+updateStartLineDisplay();
+const box = document.getElementById('startline-box');
+if (box) box.classList.remove('has-line');
+showStatus('Start line cleared', 'status-gps');
+}
+
+function updateStartLinePinButtons() {
+const pinBtn = document.getElementById('pin-end-btn');
+const cvBtn = document.getElementById('cv-end-btn');
+const pinStatus = document.getElementById('pin-end-status');
+const cvStatus = document.getElementById('cv-end-status');
+
+if (pinBtn && pinStatus) {
+if (app.startLine.pinEnd) {
+pinBtn.classList.add('dropped');
+pinStatus.textContent = '✓ Dropped';
+} else {
+pinBtn.classList.remove('dropped');
+pinStatus.textContent = 'Tap to drop';
+}
+}
+
+if (cvBtn && cvStatus) {
+if (app.startLine.cvEnd) {
+cvBtn.classList.add('dropped');
+cvStatus.textContent = '✓ Dropped';
+} else {
+cvBtn.classList.remove('dropped');
+cvStatus.textContent = 'Tap to drop';
+}
+}
+
+// Show distances panel only when both pins are dropped
+const distPanel = document.getElementById('startline-distances');
+const box = document.getElementById('startline-box');
+if (distPanel && box) {
+if (app.startLine.pinEnd && app.startLine.cvEnd) {
+distPanel.classList.add('visible');
+box.classList.add('has-line');
+} else {
+distPanel.classList.remove('visible');
+box.classList.remove('has-line');
+}
+}
+}
+
+function updateStartLineDisplay() {
+if (!isCVStart()) return;
+
+const pinDistEl = document.getElementById('startline-pin-dist');
+const cvDistEl = document.getElementById('startline-cv-dist');
+const pinTimeEl = document.getElementById('startline-pin-time');
+const cvTimeEl = document.getElementById('startline-cv-time');
+const bearingInfoEl = document.getElementById('startline-bearing-info');
+
+if (!app.userPosition) return;
+
+// Calculate 5-second average speed (use existing speedHistory which keeps last 5 readings)
+const avgSpeedKnots = app.averageSpeed || 0;
+
+// Distance to pin end
+if (app.startLine.pinEnd && pinDistEl && pinTimeEl) {
+const distM = calculateDistance(
+app.userPosition.latitude, app.userPosition.longitude,
+app.startLine.pinEnd.lat, app.startLine.pinEnd.lng
+);
+const distNm = distM / 1852;
+pinDistEl.textContent = distNm.toFixed(2);
+
+// Time to pin (distance / speed), speed in knots = nm/hr
+if (avgSpeedKnots > 0.5) {
+const hoursToPin = distNm / avgSpeedKnots;
+const secondsToPin = hoursToPin * 3600;
+pinTimeEl.textContent = formatTimeToMark(secondsToPin);
+} else {
+pinTimeEl.textContent = '—';
+}
+}
+
+// Distance to CV end
+if (app.startLine.cvEnd && cvDistEl && cvTimeEl) {
+const distM = calculateDistance(
+app.userPosition.latitude, app.userPosition.longitude,
+app.startLine.cvEnd.lat, app.startLine.cvEnd.lng
+);
+const distNm = distM / 1852;
+cvDistEl.textContent = distNm.toFixed(2);
+
+// Time to CV
+if (avgSpeedKnots > 0.5) {
+const hoursToCV = distNm / avgSpeedKnots;
+const secondsToCV = hoursToCV * 3600;
+cvTimeEl.textContent = formatTimeToMark(secondsToCV);
+} else {
+cvTimeEl.textContent = '—';
+}
+}
+
+// Line bearing and length (when both ends are set)
+if (app.startLine.pinEnd && app.startLine.cvEnd && bearingInfoEl) {
+const lineBearing = calculateBearing(
+app.startLine.pinEnd.lat, app.startLine.pinEnd.lng,
+app.startLine.cvEnd.lat, app.startLine.cvEnd.lng
+);
+const lineLength = calculateDistance(
+app.startLine.pinEnd.lat, app.startLine.pinEnd.lng,
+app.startLine.cvEnd.lat, app.startLine.cvEnd.lng
+);
+const lineLengthNm = lineLength / 1852;
+bearingInfoEl.innerHTML = `Line: <strong>${Math.round(lineBearing)}°</strong> / ${(lineLengthNm * 1000).toFixed(0)}m`;
+} else if (bearingInfoEl) {
+bearingInfoEl.innerHTML = '';
+}
+}
+
+function formatTimeToMark(seconds) {
+if (seconds < 0 || !isFinite(seconds)) return '—';
+if (seconds > 3600) return '>1hr';
+const mins = Math.floor(seconds / 60);
+const secs = Math.floor(seconds % 60);
+return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 // ── End Pre-Start View ────────────────────────────────────────────────
 
 // ── Fullscreen helpers for trimmer view ──────────────────────────────
@@ -7975,6 +8319,7 @@ document.getElementById('cmg-to-next').textContent = 'GPS…';
 document.getElementById('current-speed').textContent = 'GPS…';
 updateTrimmerStats({ noGPS: true });
 if (typeof updatePrestartDisplay === 'function') updatePrestartDisplay();
+if (typeof updateStartLineDisplay === 'function') updateStartLineDisplay();
 }
 return;
 }
@@ -8100,6 +8445,7 @@ document.getElementById('bearing-to-next').textContent = Math.round(bearing) + '
 
 // Mirror to Pre-Start view (no-op if not active)
 if (typeof updatePrestartDisplay === 'function') updatePrestartDisplay();
+if (typeof updateStartLineDisplay === 'function') updateStartLineDisplay();
 
 
 // Display CMG with color coding for negative values
