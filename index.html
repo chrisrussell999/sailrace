@@ -3332,11 +3332,11 @@ Must follow course sequence - no skipping ahead!
 <div class="prestart-hint">Starting countdown opens trimmer view</div>
 </div>
 
-<div class="prestart-mark-line">
+<div class="prestart-mark-line" id="prestart-mark-line" style="display: none;">
 Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-side" id="prestart-mark-side">—</span>
 </div>
 
-<div class="prestart-nav-box">
+<div class="prestart-nav-box" id="prestart-nav-box" style="display: none;">
 <div class="prestart-nav-stat">
 <div class="pn-value" id="prestart-distance">—</div>
 <div class="pn-label">Dist · nm</div>
@@ -3358,7 +3358,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="pin-label" id="pin-end-status">Tap to drop</div>
 </button>
 <button class="startline-pin-btn cv-end" id="cv-end-btn" onclick="dropCVEnd()">
-<div>🚤 CV End</div>
+<div>🚤 CV/Hut End</div>
 <div class="pin-label" id="cv-end-status">Tap to drop</div>
 </button>
 </div>
@@ -3369,7 +3369,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="dist-time" id="startline-pin-time">—</div>
 </div>
 <div class="startline-dist cv-end">
-<div class="dist-label">To CV</div>
+<div class="dist-label">To CV/Hut</div>
 <div class="dist-value" id="startline-cv-dist">—</div>
 <div class="dist-time" id="startline-cv-time">—</div>
 </div>
@@ -3450,8 +3450,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 <div class="trimmer-tap-hint" id="trimmer-tap-hint">Hold anywhere for 1 second to mark passed</div>
-<div class="finish-instruction" id="finish-instruction">Proceed to finish line</div>
-<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">Press when finish line crossed</button>
+<button class="finish-race-btn" id="finish-race-btn" onclick="finishRace()">PRESS When Finish Line Crossed</button>
 </div>
 </div>
 
@@ -6309,11 +6308,8 @@ return typeof activeCourseSet !== 'undefined' && activeCourseSet.includes('CV');
 function updateStartLineVisibility() {
 const box = document.getElementById('startline-box');
 if (!box) return;
-if (isCVStart()) {
+// Always show start line pins for all courses
 box.classList.add('visible');
-} else {
-box.classList.remove('visible');
-}
 }
 
 function dropPinEnd() {
@@ -6344,7 +6340,7 @@ droppedAt: Date.now()
 };
 updateStartLinePinButtons();
 updateStartLineDisplay();
-showStatus('🚤 CV end dropped', 'status-gps');
+showStatus('🚤 CV/Hut end dropped', 'status-gps');
 if ('vibrate' in navigator) navigator.vibrate(50);
 }
 
@@ -6399,7 +6395,12 @@ box.classList.remove('has-line');
 }
 
 function updateStartLineDisplay() {
-if (!isCVStart()) return;
+// Show/hide first mark info based on whether start line is set
+const markLine = document.getElementById('prestart-mark-line');
+const navBox = document.getElementById('prestart-nav-box');
+const hasLine = app.startLine.pinEnd && app.startLine.cvEnd;
+if (markLine) markLine.style.display = hasLine ? 'block' : 'none';
+if (navBox) navBox.style.display = hasLine ? 'flex' : 'none';
 
 const pinDistEl = document.getElementById('startline-pin-dist');
 const cvDistEl = document.getElementById('startline-cv-dist');
@@ -6882,11 +6883,9 @@ sideEl.style.color = '#66ff88';
 setUpcomingEmpty('');
 if (hintEl) { hintEl.textContent = 'Press Finish Race when you cross the finish line'; hintEl.classList.add('complete'); }
 if (tapArea) tapArea.classList.add('disabled');
-// Show the Finish Race button and instruction
+// Show the Finish Race button
 const finishBtn = document.getElementById('finish-race-btn');
-const finishInstruction = document.getElementById('finish-instruction');
 if (finishBtn) finishBtn.classList.add('visible');
-if (finishInstruction) finishInstruction.classList.add('visible');
 return;
 }
 
@@ -6927,11 +6926,9 @@ sideEl.style.background = '';
 sideEl.style.color = '';
 if (hintEl) { hintEl.textContent = 'Hold anywhere for 1 second to mark passed'; hintEl.classList.remove('complete'); }
 if (tapArea) tapArea.classList.remove('disabled');
-// Hide the Finish Race button and instruction while marks remain
+// Hide the Finish Race button while marks remain
 const finishBtn = document.getElementById('finish-race-btn');
-const finishInstruction = document.getElementById('finish-instruction');
 if (finishBtn) finishBtn.classList.remove('visible');
-if (finishInstruction) finishInstruction.classList.remove('visible');
 
 // Upcoming mark info: name on top, range & bearing from current mark below
 const afterIndex = app.currentBuoyIndex + 1;
