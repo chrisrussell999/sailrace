@@ -658,6 +658,77 @@ line-height: 1;
 color: #fff;
 }
 
+/* Start Line Panel - countdown phase only */
+.trimmer-startline-panel {
+display: none;
+background: linear-gradient(180deg, #0d1a0d 0%, #0a0f0a 100%);
+border-bottom: 2px solid #1a3a1a;
+padding: 0.6rem 1rem;
+flex-shrink: 0;
+}
+.trimmer-startline-panel.visible {
+display: block;
+}
+.trimmer-startline-row {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.8rem;
+margin-bottom: 0.5rem;
+}
+.trimmer-startline-end {
+background: #1a1a1a;
+border-radius: 8px;
+padding: 0.5rem 0.4rem;
+text-align: center;
+}
+.trimmer-startline-end.pin { border-left: 3px solid #cccc44; }
+.trimmer-startline-end.cv { border-left: 3px solid #cc8844; }
+.tsl-label {
+font-size: 0.65rem;
+color: #888;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+margin-bottom: 0.15rem;
+}
+.tsl-dist {
+font-size: 1.4rem;
+font-weight: 800;
+font-variant-numeric: tabular-nums;
+}
+.trimmer-startline-end.pin .tsl-dist { color: #cccc44; }
+.trimmer-startline-end.cv .tsl-dist { color: #cc8844; }
+.tsl-time {
+font-size: 1.1rem;
+font-weight: 700;
+color: #66ccff;
+font-variant-numeric: tabular-nums;
+}
+.trimmer-startline-mark {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.8rem;
+padding: 0.3rem 0;
+background: #111;
+border-radius: 6px;
+}
+.tsl-mark-label {
+font-size: 0.7rem;
+color: #888;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+.tsl-mark-info {
+display: flex;
+gap: 1rem;
+}
+.tsl-mark-bearing, .tsl-mark-dist {
+font-size: 1rem;
+font-weight: 700;
+color: #fff;
+font-variant-numeric: tabular-nums;
+}
+
 /* Tap hint */
 .trimmer-tap-hint {
 text-align: center;
@@ -3397,6 +3468,28 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="trimmer-timer-top-label">Race Timer</div>
 <div class="trimmer-timer-top-value" id="trimmer-timer-top-value">—</div>
 </div>
+<!-- Start Line Panel - visible during countdown only -->
+<div class="trimmer-startline-panel" id="trimmer-startline-panel">
+<div class="trimmer-startline-row">
+<div class="trimmer-startline-end pin">
+<div class="tsl-label">PIN</div>
+<div class="tsl-dist" id="trimmer-pin-dist">—</div>
+<div class="tsl-time" id="trimmer-pin-time">—</div>
+</div>
+<div class="trimmer-startline-end cv">
+<div class="tsl-label">CV/HUT</div>
+<div class="tsl-dist" id="trimmer-cv-dist">—</div>
+<div class="tsl-time" id="trimmer-cv-time">—</div>
+</div>
+</div>
+<div class="trimmer-startline-mark">
+<div class="tsl-mark-label">First Mark</div>
+<div class="tsl-mark-info">
+<span class="tsl-mark-bearing" id="trimmer-mark1-bearing">—°</span>
+<span class="tsl-mark-dist" id="trimmer-mark1-dist">— nm</span>
+</div>
+</div>
+</div>
 <div class="trimmer-edge-zone" id="trimmer-edge-zone" onclick="event.stopPropagation(); revealTrimmerBar();"></div>
 <div id="trimmer-tap-area" class="trimmer-tap-area">
 <div class="trimmer-press-overlay"></div>
@@ -3762,6 +3855,8 @@ app.timer.startTime = Date.now() - app.timer.pausedTime;
 // Auto-jump from pre-start to trimmer when the countdown is activated
 if (app.currentScreen === 'prestart-screen' && app.currentCourse) {
 openTrimmerView();
+// Show start line panel immediately for countdown
+if (typeof updateStartLineDisplay === 'function') updateStartLineDisplay();
 }
 
 
@@ -3818,6 +3913,10 @@ document.getElementById('timer-sync-btn').disabled = true;
 document.getElementById('trimmer-sync-btn').disabled = true;
 const prestartSyncBtnRace = document.getElementById('prestart-sync-btn');
 if (prestartSyncBtnRace) prestartSyncBtnRace.disabled = true;
+
+// Hide start line panel - race has started, switch to full trimmer view
+const trimmerStartlinePanel = document.getElementById('trimmer-startline-panel');
+if (trimmerStartlinePanel) trimmerStartlinePanel.classList.remove('visible');
 
 showStatus('🏁 Start! Race timer is now counting elapsed time.', 'status-gps');
 }
@@ -6408,46 +6507,74 @@ const pinTimeEl = document.getElementById('startline-pin-time');
 const cvTimeEl = document.getElementById('startline-cv-time');
 const bearingInfoEl = document.getElementById('startline-bearing-info');
 
+// Trimmer panel elements
+const trimmerPanel = document.getElementById('trimmer-startline-panel');
+const trimmerPinDist = document.getElementById('trimmer-pin-dist');
+const trimmerPinTime = document.getElementById('trimmer-pin-time');
+const trimmerCvDist = document.getElementById('trimmer-cv-dist');
+const trimmerCvTime = document.getElementById('trimmer-cv-time');
+const trimmerMark1Bearing = document.getElementById('trimmer-mark1-bearing');
+const trimmerMark1Dist = document.getElementById('trimmer-mark1-dist');
+
+// Show trimmer panel only during countdown (timer running but race not started yet)
+const inCountdown = app.timer.isRunning && app.timer.currentSeconds > 0;
+const hasStartLine = app.startLine.pinEnd && app.startLine.cvEnd;
+if (trimmerPanel) {
+if (inCountdown && hasStartLine) {
+trimmerPanel.classList.add('visible');
+} else {
+trimmerPanel.classList.remove('visible');
+}
+}
+
 if (!app.userPosition) return;
 
 // Calculate 5-second average speed (use existing speedHistory which keeps last 5 readings)
 const avgSpeedKnots = app.averageSpeed || 0;
 
 // Distance to pin end
-if (app.startLine.pinEnd && pinDistEl && pinTimeEl) {
+if (app.startLine.pinEnd) {
 const distM = calculateDistance(
 app.userPosition.latitude, app.userPosition.longitude,
 app.startLine.pinEnd.lat, app.startLine.pinEnd.lng
 );
 const distNm = distM / 1852;
-pinDistEl.textContent = distNm.toFixed(2);
+if (pinDistEl) pinDistEl.textContent = distNm.toFixed(2);
+if (trimmerPinDist) trimmerPinDist.textContent = distNm.toFixed(2);
 
 // Time to pin (distance / speed), speed in knots = nm/hr
 if (avgSpeedKnots > 0.5) {
 const hoursToPin = distNm / avgSpeedKnots;
 const secondsToPin = hoursToPin * 3600;
-pinTimeEl.textContent = formatTimeToMark(secondsToPin);
+const timeStr = formatTimeToMark(secondsToPin);
+if (pinTimeEl) pinTimeEl.textContent = timeStr;
+if (trimmerPinTime) trimmerPinTime.textContent = timeStr;
 } else {
-pinTimeEl.textContent = '—';
+if (pinTimeEl) pinTimeEl.textContent = '—';
+if (trimmerPinTime) trimmerPinTime.textContent = '—';
 }
 }
 
 // Distance to CV end
-if (app.startLine.cvEnd && cvDistEl && cvTimeEl) {
+if (app.startLine.cvEnd) {
 const distM = calculateDistance(
 app.userPosition.latitude, app.userPosition.longitude,
 app.startLine.cvEnd.lat, app.startLine.cvEnd.lng
 );
 const distNm = distM / 1852;
-cvDistEl.textContent = distNm.toFixed(2);
+if (cvDistEl) cvDistEl.textContent = distNm.toFixed(2);
+if (trimmerCvDist) trimmerCvDist.textContent = distNm.toFixed(2);
 
 // Time to CV
 if (avgSpeedKnots > 0.5) {
 const hoursToCV = distNm / avgSpeedKnots;
 const secondsToCV = hoursToCV * 3600;
-cvTimeEl.textContent = formatTimeToMark(secondsToCV);
+const timeStr = formatTimeToMark(secondsToCV);
+if (cvTimeEl) cvTimeEl.textContent = timeStr;
+if (trimmerCvTime) trimmerCvTime.textContent = timeStr;
 } else {
-cvTimeEl.textContent = '—';
+if (cvTimeEl) cvTimeEl.textContent = '—';
+if (trimmerCvTime) trimmerCvTime.textContent = '—';
 }
 }
 
@@ -6465,6 +6592,25 @@ const lineLengthNm = lineLength / 1852;
 bearingInfoEl.innerHTML = `Line: <strong>${Math.round(lineBearing)}°</strong> / ${(lineLengthNm * 1000).toFixed(0)}m`;
 } else if (bearingInfoEl) {
 bearingInfoEl.innerHTML = '';
+}
+
+// First mark info for trimmer panel
+if (app.currentCourse && app.currentCourse.data && app.currentCourse.data.length > 0) {
+const [firstMarkName] = app.currentCourse.data[0];
+if (buoys[firstMarkName]) {
+const [markLat, markLng] = buoys[firstMarkName].coords;
+const distM = calculateDistance(
+app.userPosition.latitude, app.userPosition.longitude,
+markLat, markLng
+);
+const distNm = distM / 1852;
+const bearing = calculateBearing(
+app.userPosition.latitude, app.userPosition.longitude,
+markLat, markLng
+);
+if (trimmerMark1Bearing) trimmerMark1Bearing.textContent = Math.round(bearing) + '°';
+if (trimmerMark1Dist) trimmerMark1Dist.textContent = distNm.toFixed(2) + ' nm';
+}
 }
 }
 
