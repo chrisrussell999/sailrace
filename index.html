@@ -5570,27 +5570,57 @@ console.error('Error removing line:', e);
 app.mapLines = [];
 
 
-// Draw course line with mobile-friendly style
+// Draw course legs with port/starboard colors and leg numbers
 try {
-const courseCoordinates = app.currentCourse.data.map(([buoyName]) => {
-const buoy = buoys[buoyName];
-if (!buoy) {
-console.error('No coordinates for buoy:', buoyName);
-return [0, 0];
-}
-return buoy.coords;
-});
+app.currentCourse.data.forEach(([buoyName, direction], index) => {
+if (index >= app.currentCourse.data.length - 1) return; // No line after last mark
+const fromBuoy = buoys[buoyName];
+const [nextBuoyName, nextDirection] = app.currentCourse.data[index + 1];
+const toBuoy = buoys[nextBuoyName];
+if (!fromBuoy || !toBuoy) return;
 
+// Color based on the rounding direction of the TARGET mark
+const isPort = nextDirection.toLowerCase() === 'p';
+const legColor = isPort ? '#dc3545' : '#28a745'; // Red for port, green for starboard
 
-const polyline = L.polyline(courseCoordinates, {
-color: '#007bff',
-weight: 4, // Thicker for mobile visibility
-opacity: 0.7,
+const legLine = L.polyline([fromBuoy.coords, toBuoy.coords], {
+color: legColor,
+weight: 4,
+opacity: 0.8,
 smoothFactor: 1
 }).addTo(app.map);
-app.mapLines.push(polyline);
+app.mapLines.push(legLine);
+
+// Add leg number label at midpoint
+const midLat = (fromBuoy.coords[0] + toBuoy.coords[0]) / 2;
+const midLng = (fromBuoy.coords[1] + toBuoy.coords[1]) / 2;
+const legNum = index + 1;
+
+const legLabel = L.divIcon({
+className: '',
+html: `<div style="
+background: rgba(0,0,0,0.7);
+color: white;
+font-weight: bold;
+font-size: 12px;
+padding: 2px 6px;
+border-radius: 10px;
+border: 2px solid ${legColor};
+white-space: nowrap;
+">${legNum}</div>`,
+iconSize: [24, 20],
+iconAnchor: [12, 10]
+});
+
+const legMarker = L.marker([midLat, midLng], {
+icon: legLabel,
+interactive: false,
+zIndexOffset: 50
+}).addTo(app.map);
+app.mapLines.push(legMarker);
+});
 } catch (error) {
-console.error('Error drawing course line:', error);
+console.error('Error drawing course legs:', error);
 }
 
 
@@ -7337,20 +7367,35 @@ L.marker(startCoord, { icon: startIcon, zIndexOffset: 1000 })
 
 // Add course buoy markers with names and colors
 if (app.currentCourse && app.currentCourse.data) {
-// Draw course line (dashed, showing intended course)
-const courseCoords = app.currentCourse.data.map(([name]) => {
-const b = buoys[name];
-return b ? b.coords : null;
-}).filter(Boolean);
+// Draw course legs with port/starboard colors (dashed for summary)
+app.currentCourse.data.forEach(([buoyName, direction], index) => {
+if (index >= app.currentCourse.data.length - 1) return;
+const fromBuoy = buoys[buoyName];
+const [nextBuoyName, nextDirection] = app.currentCourse.data[index + 1];
+const toBuoy = buoys[nextBuoyName];
+if (!fromBuoy || !toBuoy) return;
 
-if (courseCoords.length > 1) {
-L.polyline(courseCoords, {
-color: '#007bff',
+const isPort = nextDirection.toLowerCase() === 'p';
+const legColor = isPort ? '#dc3545' : '#28a745';
+
+L.polyline([fromBuoy.coords, toBuoy.coords], {
+color: legColor,
 weight: 2,
-opacity: 0.5,
+opacity: 0.6,
 dashArray: '8, 8'
 }).addTo(summaryMap);
-}
+
+// Leg number at midpoint
+const midLat = (fromBuoy.coords[0] + toBuoy.coords[0]) / 2;
+const midLng = (fromBuoy.coords[1] + toBuoy.coords[1]) / 2;
+const legLabel = L.divIcon({
+className: '',
+html: `<div style="background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:1px 4px;border-radius:8px;border:1px solid ${legColor};">${index + 1}</div>`,
+iconSize: [20, 16],
+iconAnchor: [10, 8]
+});
+L.marker([midLat, midLng], { icon: legLabel, interactive: false }).addTo(summaryMap);
+});
 
 app.currentCourse.data.forEach(([buoyName, direction], index) => {
 const buoy = buoys[buoyName];
@@ -7520,16 +7565,39 @@ const courseCoords = course.data
 .map(([name]) => buoys[name] ? buoys[name].coords : null)
 .filter(Boolean);
 
-// Course polyline — same colour/weight/opacity as the main nav map
+// Course legs with port/starboard colors and leg numbers
 if (courseCoords.length > 1) {
 try {
-const line = L.polyline(courseCoords, {
-color: '#007bff',
+course.data.forEach(([buoyName, direction], index) => {
+if (index >= course.data.length - 1) return;
+const fromBuoy = buoys[buoyName];
+const [nextBuoyName, nextDirection] = course.data[index + 1];
+const toBuoy = buoys[nextBuoyName];
+if (!fromBuoy || !toBuoy) return;
+
+const isPort = nextDirection.toLowerCase() === 'p';
+const legColor = isPort ? '#dc3545' : '#28a745';
+
+const legLine = L.polyline([fromBuoy.coords, toBuoy.coords], {
+color: legColor,
 weight: 4,
-opacity: 0.7,
+opacity: 0.8,
 smoothFactor: 1
 }).addTo(map);
-layers.push(line);
+layers.push(legLine);
+
+// Leg number at midpoint
+const midLat = (fromBuoy.coords[0] + toBuoy.coords[0]) / 2;
+const midLng = (fromBuoy.coords[1] + toBuoy.coords[1]) / 2;
+const legLabel = L.divIcon({
+className: '',
+html: `<div style="background:rgba(0,0,0,0.7);color:white;font-weight:bold;font-size:12px;padding:2px 6px;border-radius:10px;border:2px solid ${legColor};">${index + 1}</div>`,
+iconSize: [24, 20],
+iconAnchor: [12, 10]
+});
+const legMarker = L.marker([midLat, midLng], { icon: legLabel, interactive: false, zIndexOffset: 50 }).addTo(map);
+layers.push(legMarker);
+});
 } catch (e) { console.error('Course line error:', e); }
 }
 
