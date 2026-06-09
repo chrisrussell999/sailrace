@@ -3045,6 +3045,17 @@ onclick="clearCourseSelection()"
 </button>
 </div>
 
+<!-- Auto Mark Pass Toggle - Prominent on Home Screen -->
+<div id="auto-mark-toggle-card" class="course-details-card" style="margin-top: 1rem; padding: 1rem;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<div>
+<div style="font-weight: 600; color: var(--text-primary); font-size: 1rem;">Auto Mark Pass</div>
+<div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Auto-advance when within 2m of mark</div>
+</div>
+<div class="toggle-switch" id="toggle-autoMarkPass-home" onclick="toggleSetting('autoMarkPass')" style="flex-shrink: 0;"></div>
+</div>
+</div>
+
 <div style="text-align: center; margin-top: 0.25rem; color: var(--text-secondary); font-size: 0.7rem;">
 <p style="margin: 0.1rem 0;">🚢 Dublin Bay racing • 🧭 GPS required</p>
 
@@ -4084,7 +4095,8 @@ app.settings[settingName] = !app.settings[settingName];
 saveSettings();
 updateSettingsUI();
 updateMapControlsVisibility();
-showStatus(`${settingName} ${app.settings[settingName] ? 'enabled' : 'disabled'}`, 'status-gps');
+const friendlyName = settingName === 'autoMarkPass' ? 'Auto Mark Pass' : settingName;
+showStatus(`${friendlyName} ${app.settings[settingName] ? 'enabled' : 'disabled'}`, 'status-gps');
 }
 
 
@@ -4097,6 +4109,17 @@ if (app.settings[setting]) {
 toggle.classList.add('active');
 } else {
 toggle.classList.remove('active');
+}
+}
+// Also update home screen toggle for autoMarkPass
+if (setting === 'autoMarkPass') {
+const homeToggle = document.getElementById('toggle-autoMarkPass-home');
+if (homeToggle) {
+if (app.settings[setting]) {
+homeToggle.classList.add('active');
+} else {
+homeToggle.classList.remove('active');
+}
 }
 }
 });
