@@ -3116,7 +3116,7 @@ Fix for Pixel 8 / Android:
 </div>
 <div class="stat-item">
 <div class="stat-value" id="buoys-remaining">-</div>
-<div class="stat-label">Remaining</div>
+<div class="stat-label">Mark</div>
 </div>
 </div>
 </div>
@@ -3160,6 +3160,7 @@ Fix for Pixel 8 / Android:
 <button id="timer-10min-btn" class="timer-duration-btn active" onclick="setTimerDuration(600)">10:00</button>
 <button id="timer-6min-btn" class="timer-duration-btn" onclick="setTimerDuration(360)">6:00</button>
 <button id="timer-5min-btn" class="timer-duration-btn" onclick="setTimerDuration(300)">5:00</button>
+<button id="timer-4min-btn" class="timer-duration-btn" onclick="setTimerDuration(240)">4:00</button>
 <button id="timer-1min-btn" class="timer-duration-btn" onclick="setTimerDuration(60)">1:00</button>
 
 </div>
@@ -3337,6 +3338,18 @@ Must follow course sequence - no skipping ahead!
 </div>
 
 <div class="settings-section">
+<h3>Race Settings</h3>
+
+<div class="setting-item">
+<div class="setting-label">
+<div class="setting-name">Auto Mark Pass</div>
+<div class="setting-description">Automatically advance to next mark when within 2m of current mark</div>
+</div>
+<div class="toggle-switch" id="toggle-autoMarkPass" onclick="toggleSetting('autoMarkPass')"></div>
+</div>
+</div>
+
+<div class="settings-section">
 <h3>GPS Tools</h3>
 <div style="padding: 1rem; background: var(--primary-bg); border-radius: 6px;">
 <button onclick="toggleGPSDebug()" style="width: 100%; padding: 0.75rem; background: var(--button-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;">
@@ -3391,6 +3404,7 @@ Must follow course sequence - no skipping ahead!
 <button class="prestart-duration-btn active" data-dur="600" onclick="setTimerDuration(600)">10:00</button>
 <button class="prestart-duration-btn" data-dur="360" onclick="setTimerDuration(360)">6:00</button>
 <button class="prestart-duration-btn" data-dur="300" onclick="setTimerDuration(300)">5:00</button>
+<button class="prestart-duration-btn" data-dur="240" onclick="setTimerDuration(240)">4:00</button>
 <button class="prestart-duration-btn" data-dur="60" onclick="setTimerDuration(60)">1:00</button>
 </div>
 <div class="prestart-controls">
@@ -3534,7 +3548,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="trimmer-bottom">
 <div class="trimmer-stat">
 <div class="trimmer-stat-value" id="trimmer-remaining">—</div>
-<div class="trimmer-stat-unit">Remaining</div>
+<div class="trimmer-stat-unit">Mark</div>
 </div>
 <div class="trimmer-timer idle" id="trimmer-timer-box">
 <div class="trimmer-timer-label">Race Timer</div>
@@ -3747,7 +3761,8 @@ settings: {
 showDebugButton: false,
 showSmoothingButton: false,
 showRefreshButton: false,
-showForceGPSButton: false
+showForceGPSButton: false,
+autoMarkPass: false
 },
 // Timer state
 timer: {
@@ -6088,7 +6103,9 @@ document.getElementById('next-buoy-name').textContent = `Next Mark: ${displayNam
 const directionEl = document.getElementById('next-buoy-direction');
 directionEl.textContent = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard';
 directionEl.className = `buoy-direction ${direction.toLowerCase() === 'p' ? 'port' : 'starboard'}`;
-document.getElementById('buoys-remaining').textContent = app.currentCourse.data.length - app.currentBuoyIndex;
+const totalMarks = app.currentCourse.data.length;
+const currentMarkNum = app.currentBuoyIndex + 1;
+document.getElementById('buoys-remaining').textContent = currentMarkNum > totalMarks ? 'Done' : `${currentMarkNum} of ${totalMarks}`;
 
 
 document.getElementById('current-buoy-display-name-div').textContent = `Next Mark: ${displayName}`;
@@ -7015,8 +7032,9 @@ if (tapArea) tapArea.classList.add('disabled');
 return;
 }
 
-const remaining = app.currentCourse.data.length - app.currentBuoyIndex;
-remainingEl.textContent = remaining;
+const totalMarks = app.currentCourse.data.length;
+const currentMarkNum = app.currentBuoyIndex + 1;
+remainingEl.textContent = currentMarkNum > totalMarks ? 'Done' : `${currentMarkNum} of ${totalMarks}`;
 
 if (app.currentBuoyIndex >= app.currentCourse.data.length) {
 nameEl.textContent = 'FINISH';
@@ -8476,6 +8494,13 @@ const distance = calculateDistance(
 app.userPosition.latitude, app.userPosition.longitude,
 nextLat, nextLng
 );
+
+// Auto mark pass: advance to next mark when within 2 meters
+if (app.settings.autoMarkPass && distance <= 2) {
+markBuoyPassed();
+showStatus(`Auto-passed mark ${nextBuoyName}`, 'status-gps');
+return; // Exit early as current buoy has changed
+}
 
 
 const bearing = calculateBearing(
