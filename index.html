@@ -3051,11 +3051,11 @@ onclick="clearCourseSelection()"
 <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem;">Mark Rounding Mode</div>
 </div>
 <div style="display: flex; gap: 0.5rem;">
-<button id="mode-manual-btn" onclick="setMarkMode(false)" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 2px solid #007bff; background: #007bff; color: white; font-weight: 600; font-size: 0.95rem; cursor: pointer;">
-MANUAL<br><span style="font-size: 0.75rem; font-weight: 400;">Hold screen 1 sec</span>
+<button id="mode-manual-btn" onclick="setMarkMode(false)" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); font-weight: 600; font-size: 0.95rem; cursor: pointer;">
+<span id="manual-tick" style="color: #28a745; font-size: 1.2rem;">✓ </span>Manual<br><span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">Hold screen 1 sec</span>
 </button>
-<button id="mode-auto-btn" onclick="setMarkMode(true)" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 2px solid var(--border-color); background: var(--button-bg); color: var(--text-secondary); font-weight: 600; font-size: 0.95rem; cursor: pointer;">
-AUTO GPS<br><span style="font-size: 0.75rem; font-weight: 400;">Within 2m of mark</span>
+<button id="mode-auto-btn" onclick="setMarkMode(true)" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); font-weight: 600; font-size: 0.95rem; cursor: pointer;">
+<span id="auto-tick" style="color: #28a745; font-size: 1.2rem; display: none;">✓ </span>Auto Mark Rounding<br><span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">Within 2m of mark</span>
 </button>
 </div>
 </div>
@@ -4114,24 +4114,16 @@ showStatus(auto ? 'AUTO GPS mode - marks advance within 2m' : 'MANUAL mode - hol
 
 // Update mark mode button styles
 function updateMarkModeButtons() {
-const manualBtn = document.getElementById('mode-manual-btn');
-const autoBtn = document.getElementById('mode-auto-btn');
-if (!manualBtn || !autoBtn) return;
+const manualTick = document.getElementById('manual-tick');
+const autoTick = document.getElementById('auto-tick');
+if (!manualTick || !autoTick) return;
 
 if (app.settings.autoMarkPass) {
-manualBtn.style.background = 'var(--button-bg)';
-manualBtn.style.color = 'var(--text-secondary)';
-manualBtn.style.borderColor = 'var(--border-color)';
-autoBtn.style.background = '#28a745';
-autoBtn.style.color = 'white';
-autoBtn.style.borderColor = '#28a745';
+manualTick.style.display = 'none';
+autoTick.style.display = 'inline';
 } else {
-manualBtn.style.background = '#007bff';
-manualBtn.style.color = 'white';
-manualBtn.style.borderColor = '#007bff';
-autoBtn.style.background = 'var(--button-bg)';
-autoBtn.style.color = 'var(--text-secondary)';
-autoBtn.style.borderColor = 'var(--border-color)';
+manualTick.style.display = 'inline';
+autoTick.style.display = 'none';
 }
 }
 
