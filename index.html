@@ -3577,10 +3577,10 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 
 <!-- Head to Finish Overlay -->
-<div id="head-to-finish-overlay" class="head-to-finish-overlay">
+<div id="head-to-finish-overlay" class="head-to-finish-overlay" onclick="dismissHeadToFinishOverlay()">
+<div class="finish-icon" style="font-size: 3rem; margin-bottom: 0.5rem;">🏁</div>
 <div class="finish-title">Proceed to Finish Line</div>
-<div class="finish-subtitle">Press the checkered button when you cross it</div>
-<button class="finish-dismiss" onclick="dismissHeadToFinishOverlay()">OK</button>
+<div class="finish-subtitle">Press the flag button when you cross the line</div>
 </div>
 
 <!-- Finish Result Overlay (intermediate screen showing times) -->
@@ -7196,6 +7196,8 @@ if (overlay) {
 overlay.classList.add('active');
 // Vibrate to get attention
 if (navigator.vibrate) { try { navigator.vibrate([100, 50, 100, 50, 200]); } catch (e) {} }
+// Auto-dismiss after 3 seconds
+setTimeout(() => dismissHeadToFinishOverlay(), 3000);
 }
 // Also update the trimmer display
 updateTrimmerMark();
