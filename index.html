@@ -5732,10 +5732,23 @@ smoothFactor: 1
 }).addTo(app.map);
 app.mapLines.push(legLine);
 
-// Add leg number label at midpoint
-const midLat = (fromBuoy.coords[0] + toBuoy.coords[0]) / 2;
-const midLng = (fromBuoy.coords[1] + toBuoy.coords[1]) / 2;
+// Add leg number label near the start of the leg (beside the arrow position)
+// This avoids overlap when back-to-back legs share the same midpoint (e.g., D→B then B→D)
 const legNum = index + 1;
+const [lat1, lng1] = fromBuoy.coords;
+const [lat2, lng2] = toBuoy.coords;
+
+// Calculate position along the leg (1/4 of the way from start buoy)
+const legLabelLat = lat1 + (lat2 - lat1) * 0.25;
+const legLabelLng = lng1 + (lng2 - lng1) * 0.25;
+
+// Calculate perpendicular offset to place number beside the leg line
+const dLat = lat2 - lat1;
+const dLng = lng2 - lng1;
+const legLength = Math.sqrt(dLat * dLat + dLng * dLng);
+const perpOffset = 0.0002; // Small offset perpendicular to the leg
+const perpLat = legLabelLat + (-dLng / legLength) * perpOffset;
+const perpLng = legLabelLng + (dLat / legLength) * perpOffset;
 
 const legLabel = L.divIcon({
 className: '',
@@ -5753,7 +5766,7 @@ iconSize: [24, 20],
 iconAnchor: [12, 10]
 });
 
-const legMarker = L.marker([midLat, midLng], {
+const legMarker = L.marker([perpLat, perpLng], {
 icon: legLabel,
 interactive: false,
 zIndexOffset: 50
@@ -6299,7 +6312,15 @@ directionEl.textContent = direction.toLowerCase() === 'p' ? 'Port' : 'Starboard'
 directionEl.className = `buoy-direction ${direction.toLowerCase() === 'p' ? 'port' : 'starboard'}`;
 const totalMarks = app.currentCourse.data.length;
 const currentMarkNum = app.currentBuoyIndex + 1;
-document.getElementById('buoys-remaining').textContent = currentMarkNum > totalMarks ? 'Done' : `${currentMarkNum} of ${totalMarks}`;
+let markDisplayText;
+if (currentMarkNum > totalMarks) {
+markDisplayText = 'Done';
+} else if (currentMarkNum === totalMarks) {
+markDisplayText = 'Last mark before finish';
+} else {
+markDisplayText = `${currentMarkNum} of ${totalMarks}`;
+}
+document.getElementById('buoys-remaining').textContent = markDisplayText;
 
 
 document.getElementById('current-buoy-display-name-div').textContent = `Next Mark: ${displayName}`;
@@ -7238,7 +7259,15 @@ return;
 
 const totalMarks = app.currentCourse.data.length;
 const currentMarkNum = app.currentBuoyIndex + 1;
-remainingEl.textContent = currentMarkNum > totalMarks ? 'Done' : `${currentMarkNum} of ${totalMarks}`;
+let markDisplayText;
+if (currentMarkNum > totalMarks) {
+markDisplayText = 'Done';
+} else if (currentMarkNum === totalMarks) {
+markDisplayText = 'Last mark before finish';
+} else {
+markDisplayText = `${currentMarkNum} of ${totalMarks}`;
+}
+remainingEl.textContent = markDisplayText;
 
 if (app.currentBuoyIndex >= app.currentCourse.data.length) {
 nameEl.textContent = 'FINISH';
@@ -7777,16 +7806,24 @@ smoothFactor: 1
 }).addTo(map);
 layers.push(legLine);
 
-// Leg number at midpoint
-const midLat = (fromBuoy.coords[0] + toBuoy.coords[0]) / 2;
-const midLng = (fromBuoy.coords[1] + toBuoy.coords[1]) / 2;
+// Leg number near start of leg (beside arrow position) - avoids overlap on back-to-back legs
+const [lat1, lng1] = fromBuoy.coords;
+const [lat2, lng2] = toBuoy.coords;
+const legLabelLat = lat1 + (lat2 - lat1) * 0.25;
+const legLabelLng = lng1 + (lng2 - lng1) * 0.25;
+const dLat = lat2 - lat1;
+const dLng = lng2 - lng1;
+const legLength = Math.sqrt(dLat * dLat + dLng * dLng);
+const perpOffset = 0.0002;
+const perpLat = legLabelLat + (-dLng / legLength) * perpOffset;
+const perpLng = legLabelLng + (dLat / legLength) * perpOffset;
 const legLabel = L.divIcon({
 className: '',
 html: `<div style="background:rgba(0,0,0,0.7);color:white;font-weight:bold;font-size:12px;padding:2px 6px;border-radius:10px;border:2px solid ${legColor};">${index + 1}</div>`,
 iconSize: [24, 20],
 iconAnchor: [12, 10]
 });
-const legMarker = L.marker([midLat, midLng], { icon: legLabel, interactive: false, zIndexOffset: 50 }).addTo(map);
+const legMarker = L.marker([perpLat, perpLng], { icon: legLabel, interactive: false, zIndexOffset: 50 }).addTo(map);
 layers.push(legMarker);
 });
 } catch (e) { console.error('Course line error:', e); }
