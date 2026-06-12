@@ -431,6 +431,27 @@ text-transform: uppercase;
 letter-spacing: 0.15em;
 margin-bottom: 0.25rem;
 }
+.next-leg-indicator {
+display: none;
+font-size: clamp(1rem, 4vw, 1.4rem);
+font-weight: 800;
+color: #fff;
+background: linear-gradient(135deg, #007bff, #0056b3);
+padding: 0.4rem 1.2rem;
+border-radius: 999px;
+margin-bottom: 0.5rem;
+animation: pulse-indicator 1.5s ease-in-out infinite;
+box-shadow: 0 0 20px rgba(0, 123, 255, 0.6);
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+.next-leg-indicator.visible {
+display: inline-block;
+}
+@keyframes pulse-indicator {
+0%, 100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.8; transform: scale(1.05); }
+}
 .trimmer-mark-name {
 font-size: clamp(2.4rem, 11vw, 5rem);
 font-weight: 900;
@@ -3055,7 +3076,7 @@ onclick="clearCourseSelection()"
 <span id="manual-tick" style="color: #28a745; font-size: 1.2rem;">✓ </span>Manual<br><span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">Hold screen 1 sec</span>
 </button>
 <button id="mode-auto-btn" onclick="setMarkMode(true)" style="flex: 1; padding: 0.75rem; border-radius: 6px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); font-weight: 600; font-size: 0.95rem; cursor: pointer;">
-<span id="auto-tick" style="color: #28a745; font-size: 1.2rem; display: none;">✓ </span>Auto Mark Rounding<br><span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">Within 2m of mark</span>
+<span id="auto-tick" style="color: #28a745; font-size: 1.2rem; display: none;">✓ </span>Auto Mark Rounding<br><span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">Within 30m of mark</span>
 </button>
 </div>
 </div>
@@ -3358,7 +3379,7 @@ Must follow course sequence - no skipping ahead!
 <div class="setting-item">
 <div class="setting-label">
 <div class="setting-name">Auto Mark Pass</div>
-<div class="setting-description">Automatically advance to next mark when within 2m of current mark</div>
+<div class="setting-description">Automatically advance to next mark when within 30m of current mark (confirmed at 2m)</div>
 </div>
 <div class="toggle-switch" id="toggle-autoMarkPass" onclick="toggleSetting('autoMarkPass')"></div>
 </div>
@@ -3531,6 +3552,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 <div class="trimmer-mark">
 <div class="trimmer-mark-current">
+<div class="next-leg-indicator" id="next-leg-indicator">▶ NEXT LEG ▶</div>
 <div class="trimmer-mark-name" id="trimmer-mark-name">—</div>
 <div class="trimmer-mark-fullname" id="trimmer-mark-fullname">—</div>
 <div class="trimmer-mark-color" id="trimmer-mark-color">—</div>
@@ -3732,6 +3754,7 @@ userPosition: null,
 rawGPSPosition: null,
 currentBuoyIndex: 0,
 completedBuoys: new Set(),
+nextLegPreview: false,
 gpsWatchId: null,
 isNavigating: false,
 activeNavTab: 'course-information',
@@ -4109,7 +4132,7 @@ app.settings.autoMarkPass = auto;
 saveSettings();
 updateSettingsUI();
 updateMarkModeButtons();
-showStatus(auto ? 'AUTO GPS mode - marks advance within 2m' : 'MANUAL mode - hold screen to advance marks', 'status-gps');
+showStatus(auto ? 'AUTO GPS mode - marks advance within 30m' : 'MANUAL mode - hold screen to advance marks', 'status-gps');
 }
 
 // Update mark mode button styles
@@ -5038,6 +5061,7 @@ app.currentCourse = null;
 app.selectedCourse = null;
 app.currentBuoyIndex = 0;
 app.completedBuoys.clear();
+app.nextLegPreview = false;
 app.isNavigating = false;
 app.autoCenter = false;
 app.showGPSDebug = false;
@@ -5340,6 +5364,7 @@ console.log('Starting navigation for course:', app.selectedCourse.name);
 app.currentCourse = app.selectedCourse;
 app.currentBuoyIndex = 0;
 app.completedBuoys.clear();
+app.nextLegPreview = false;
 
 
 // Reset CMG tracking for new course
@@ -5676,7 +5701,7 @@ console.error('Error removing line:', e);
 app.mapLines = [];
 
 
-// Draw course legs with port/starboard colors and leg numbers
+// Draw course legs with colors: light grey (other), dark grey (current), blue (next)
 try {
 app.currentCourse.data.forEach(([buoyName, direction], index) => {
 if (index >= app.currentCourse.data.length - 1) return; // No line after last mark
@@ -5685,14 +5710,24 @@ const [nextBuoyName, nextDirection] = app.currentCourse.data[index + 1];
 const toBuoy = buoys[nextBuoyName];
 if (!fromBuoy || !toBuoy) return;
 
-// Color based on the rounding direction of the TARGET mark
-const isPort = nextDirection.toLowerCase() === 'p';
-const legColor = isPort ? '#dc3545' : '#28a745'; // Red for port, green for starboard
+// Color based on leg status: current leg (dark grey), next leg (blue), others (light grey)
+// Current leg is the leg ending at currentBuoyIndex (index === currentBuoyIndex - 1)
+// Next leg is the leg starting from currentBuoyIndex (index === currentBuoyIndex)
+let legColor;
+const currentLegIndex = app.currentBuoyIndex - 1;
+const nextLegIndex = app.currentBuoyIndex;
+if (index === currentLegIndex) {
+legColor = '#555555'; // Dark grey - current leg
+} else if (index === nextLegIndex) {
+legColor = '#007bff'; // Blue - next leg
+} else {
+legColor = '#cccccc'; // Light grey - other legs
+}
 
 const legLine = L.polyline([fromBuoy.coords, toBuoy.coords], {
 color: legColor,
 weight: 4,
-opacity: 0.8,
+opacity: 0.9,
 smoothFactor: 1
 }).addTo(app.map);
 app.mapLines.push(legLine);
@@ -6363,13 +6398,17 @@ buoyItem.style.cursor = 'pointer';
 buoyItem.onclick = function() {
 if (isCurrent) {
 console.log('Marking buoy as passed:', buoyName);
+app.nextLegPreview = false;
 markBuoyPassed();
+updateNextLegIndicator();
 } else if (canUnmark) {
 console.log('Unmarking buoy:', buoyName);
 app.completedBuoys.delete(index);
 app.currentBuoyIndex = index;
+app.nextLegPreview = false;
 showStatus(`Unmarked ${buoyName} - back to current target`, 'status-gps');
 updateNavigationDisplay();
+updateNextLegIndicator();
 if (app.userPosition) {
 updateNavigationInfo();
 }
@@ -6919,6 +6958,7 @@ app.currentCourse = null;
 app.selectedCourse = null;
 app.currentBuoyIndex = 0;
 app.completedBuoys.clear();
+app.nextLegPreview = false;
 app.previousPosition = null;
 app.previousTime = null;
 app.cmgSpeed = 0;
@@ -7028,7 +7068,10 @@ area.classList.add('confirmed');
 setTimeout(() => area.classList.remove('confirmed'), 250);
 }
 if (navigator.vibrate) { try { navigator.vibrate([60, 40, 60]); } catch (e) {} }
+// Reset preview mode on manual mark
+app.nextLegPreview = false;
 markBuoyPassed();
+updateNextLegIndicator();
 }
 
 function attachTrimmerPressHandlers() {
@@ -7149,8 +7192,10 @@ const undoIndex = app.currentBuoyIndex - 1;
 const [buoyName] = app.currentCourse.data[undoIndex];
 app.completedBuoys.delete(undoIndex);
 app.currentBuoyIndex = undoIndex;
+app.nextLegPreview = false;
 showStatus(`Unmarked ${buoyName}`, 'status-gps');
 updateNavigationDisplay();
+updateNextLegIndicator();
 if (app.userPosition) updateNavigationInfo();
 if (navigator.vibrate) { try { navigator.vibrate([20, 40, 20]); } catch (e) {} }
 }
@@ -7273,6 +7318,25 @@ upcomingStatsEl.textContent = 'position unknown';
 }
 } else {
 setUpcomingEmpty('Finish next');
+}
+
+// Show "NEXT LEG" indicator if in preview mode (30m-2m range)
+updateNextLegIndicator();
+}
+
+// Update the NEXT LEG indicator based on preview mode state
+function updateNextLegIndicator() {
+const indicator = document.getElementById('next-leg-indicator');
+if (!indicator) return;
+
+if (app.nextLegPreview) {
+indicator.classList.add('visible');
+} else {
+indicator.classList.remove('visible');
+}
+// Also refresh the map display to update leg colors
+if (app.map && app.currentCourse) {
+updateMapDisplay();
 }
 }
 
@@ -7475,7 +7539,7 @@ L.marker(startCoord, { icon: startIcon, zIndexOffset: 1000 })
 
 // Add course buoy markers with names and colors
 if (app.currentCourse && app.currentCourse.data) {
-// Draw course legs with port/starboard colors (dashed for summary)
+// Draw course legs with colors: light grey (other), dark grey (current), blue (next)
 app.currentCourse.data.forEach(([buoyName, direction], index) => {
 if (index >= app.currentCourse.data.length - 1) return;
 const fromBuoy = buoys[buoyName];
@@ -7483,13 +7547,22 @@ const [nextBuoyName, nextDirection] = app.currentCourse.data[index + 1];
 const toBuoy = buoys[nextBuoyName];
 if (!fromBuoy || !toBuoy) return;
 
-const isPort = nextDirection.toLowerCase() === 'p';
-const legColor = isPort ? '#dc3545' : '#28a745';
+// Color based on leg status
+let legColor;
+const currentLegIndex = app.currentBuoyIndex - 1;
+const nextLegIndex = app.currentBuoyIndex;
+if (index === currentLegIndex) {
+legColor = '#555555'; // Dark grey - current leg
+} else if (index === nextLegIndex) {
+legColor = '#007bff'; // Blue - next leg
+} else {
+legColor = '#cccccc'; // Light grey - other legs
+}
 
 L.polyline([fromBuoy.coords, toBuoy.coords], {
 color: legColor,
 weight: 2,
-opacity: 0.6,
+opacity: 0.8,
 dashArray: '8, 8'
 }).addTo(summaryMap);
 
@@ -7673,9 +7746,10 @@ const courseCoords = course.data
 .map(([name]) => buoys[name] ? buoys[name].coords : null)
 .filter(Boolean);
 
-// Course legs with port/starboard colors and leg numbers
+// Course legs with colors: light grey (other), dark grey (current), blue (next)
 if (courseCoords.length > 1) {
 try {
+const currentBuoyIdx = opts.currentBuoyIndex != null ? opts.currentBuoyIndex : 0;
 course.data.forEach(([buoyName, direction], index) => {
 if (index >= course.data.length - 1) return;
 const fromBuoy = buoys[buoyName];
@@ -7683,13 +7757,22 @@ const [nextBuoyName, nextDirection] = course.data[index + 1];
 const toBuoy = buoys[nextBuoyName];
 if (!fromBuoy || !toBuoy) return;
 
-const isPort = nextDirection.toLowerCase() === 'p';
-const legColor = isPort ? '#dc3545' : '#28a745';
+// Color based on leg status: current leg (dark grey), next leg (blue), others (light grey)
+let legColor;
+const currentLegIndex = currentBuoyIdx - 1;
+const nextLegIndex = currentBuoyIdx;
+if (index === currentLegIndex) {
+legColor = '#555555'; // Dark grey - current leg
+} else if (index === nextLegIndex) {
+legColor = '#007bff'; // Blue - next leg
+} else {
+legColor = '#cccccc'; // Light grey - other legs
+}
 
 const legLine = L.polyline([fromBuoy.coords, toBuoy.coords], {
 color: legColor,
 weight: 4,
-opacity: 0.8,
+opacity: 0.9,
 smoothFactor: 1
 }).addTo(map);
 layers.push(legLine);
@@ -8694,11 +8777,22 @@ app.userPosition.latitude, app.userPosition.longitude,
 nextLat, nextLng
 );
 
-// Auto mark pass: advance to next mark when within 2 meters
-if (app.settings.autoMarkPass && distance <= 2) {
+// Auto mark pass: advance to next mark when within 30 meters
+// But show "NEXT LEG" indicator until within 2 meters
+if (app.settings.autoMarkPass && distance <= 30 && !app.nextLegPreview) {
+// Enter next leg preview mode - show we're approaching but not yet rounded
+app.nextLegPreview = true;
 markBuoyPassed();
-showStatus(`Auto-passed mark ${nextBuoyName}`, 'status-gps');
+showStatus(`Approaching next mark - ${nextBuoyName}`, 'status-gps');
+updateNextLegIndicator();
 return; // Exit early as current buoy has changed
+}
+
+// When within 2m, confirm the mark as current leg (exit preview mode)
+if (app.nextLegPreview && distance <= 2) {
+app.nextLegPreview = false;
+showStatus(`Mark rounded - now on current leg`, 'status-gps');
+updateNextLegIndicator();
 }
 
 
@@ -9295,6 +9389,7 @@ app.currentCourse = modalSelectedCourse;
 app.selectedCourse = modalSelectedCourse;
 app.currentBuoyIndex = 0;
 app.completedBuoys.clear();
+app.nextLegPreview = false;
 
 
 // Reset CMG & speed tracking for the new course
