@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -4220,7 +4221,14 @@ const buoys = {
 "W": { coords: [53.295500, -6.118333], name: "Bay", color: "Black" },
 "X": { coords: [53.307167, -6.139000], name: "Turning", color: "Yellow" },
 "Y": { coords: [53.296333, -6.103833], name: "Omega", color: "Yellow" },
-"3": { coords: [53.304436, -6.135351], name: "Green", color: "Green" }
+"3": { coords: [53.304436, -6.135351], name: "Green", color: "Green" },
+
+// Lough Derg Test Track marks (Ireland - Dromineer to Terryglass)
+"LD1": { coords: [52.9267, -8.2752], name: "Dromineer S/F", color: "Yellow" },
+"LD2": { coords: [52.938, -8.29], name: "Dromineer North", color: "Yellow" },
+"LD3": { coords: [52.95, -8.32], name: "Mid-lake West", color: "Yellow" },
+"LD4": { coords: [52.97, -8.295], name: "Terryglass", color: "Yellow" },
+"LD5": { coords: [52.955, -8.265], name: "Mid-lake East", color: "Yellow" }
 };
 
 
@@ -4952,6 +4960,23 @@ courseSets["2026 DL Combined Clubs Regatta"] = {
 "R2": [["E","P"],["D","P"],["K","P"],["D","P"],["B","P"],["J","P"]],
 "R3": [["E","P"],["B","P"],["J","P"]],
 "R4": [["E","P"],["J","P"]]
+};
+
+
+// ── Lough Derg Test Track ────────────────────────────────────────────
+// Virtual start line - user drops two pins to create start/finish
+// 5 short courses (3 marks) using closer marks: LD1, LD2, LD5
+// 2 longer courses (4 marks) using all marks
+courseSets["Lough Derg Test Track"] = {
+// Short courses (3 marks) - Dromineer area triangle
+"L": [["LD1","P"],["LD2","P"],["LD5","P"]],
+"M": [["LD2","P"],["LD5","P"],["LD1","P"]],
+"N": [["LD5","P"],["LD1","P"],["LD2","P"]],
+"O": [["LD1","P"],["LD5","P"],["LD2","P"]],
+"P": [["LD2","P"],["LD1","P"],["LD5","P"]],
+// Longer courses (4 marks) - full lake
+"Q": [["LD1","P"],["LD2","P"],["LD3","P"],["LD4","P"]],
+"R": [["LD2","P"],["LD4","P"],["LD5","P"],["LD3","P"]]
 };
 
 
