@@ -1128,6 +1128,262 @@ color: #fff;
 font-weight: 700;
 }
 
+/* Virtual Racing Setup Screen */
+#virtual-setup-screen {
+padding: 0;
+background: #0a0a0a;
+color: #fff;
+min-height: 100vh;
+position: relative;
+display: none;
+}
+#virtual-setup-screen.active {
+display: flex;
+flex-direction: column;
+}
+.virtual-setup-topbar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0.6rem 0.8rem;
+background: rgba(17,17,17,0.92);
+border-bottom: 1px solid #333;
+}
+.virtual-setup-topbar .virtual-setup-title {
+font-weight: 700;
+letter-spacing: 0.05em;
+color: #eee;
+}
+.virtual-setup-topbar button {
+background: #2b2b2b;
+color: #fff;
+border: 1px solid #444;
+padding: 0.5rem 0.8rem;
+border-radius: 8px;
+cursor: pointer;
+}
+.virtual-clear-all-btn {
+background: #3d1f1f !important;
+border-color: #663333 !important;
+color: #ff8888 !important;
+}
+.virtual-setup-body {
+flex: 1;
+display: flex;
+flex-direction: column;
+padding: 1rem;
+gap: 1rem;
+overflow-y: auto;
+}
+.virtual-gps-status {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+padding: 0.6rem 1rem;
+background: #1a1a1a;
+border-radius: 8px;
+font-size: 0.85rem;
+}
+.virtual-gps-indicator {
+width: 10px;
+height: 10px;
+border-radius: 50%;
+background: #666;
+}
+.virtual-gps-indicator.active {
+background: #4caf50;
+animation: pulse 2s infinite;
+}
+.virtual-gps-indicator.poor {
+background: #ff9800;
+}
+.virtual-section {
+background: #111;
+border: 2px solid #333;
+border-radius: 14px;
+padding: 1rem;
+}
+.virtual-section-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 0.75rem;
+}
+.virtual-section-title {
+font-size: 0.85rem;
+font-weight: 700;
+color: #aaa;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+.virtual-clear-btn {
+background: #333;
+border: 1px solid #555;
+color: #aaa;
+font-size: 0.75rem;
+padding: 0.3rem 0.6rem;
+border-radius: 6px;
+cursor: pointer;
+}
+.virtual-line-pins {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.5rem;
+margin-bottom: 0.5rem;
+}
+.virtual-pin-btn {
+padding: 0.8rem 0.5rem;
+border-radius: 10px;
+font-size: 0.9rem;
+font-weight: 700;
+cursor: pointer;
+text-align: center;
+transition: all 0.15s;
+}
+.virtual-pin-btn.pin1 {
+background: #1a2d2d;
+border: 2px solid #227766;
+color: #44ccaa;
+}
+.virtual-pin-btn.pin2 {
+background: #2d1a2d;
+border: 2px solid #662277;
+color: #cc44aa;
+}
+.virtual-pin-btn.dropped {
+background: #1a2d1a;
+border-color: #4caf50;
+color: #4caf50;
+}
+.virtual-pin-btn:active {
+transform: scale(0.97);
+}
+.virtual-pin-btn .pin-label {
+font-size: 0.7rem;
+opacity: 0.7;
+margin-top: 0.2rem;
+}
+.virtual-line-info {
+text-align: center;
+padding: 0.5rem;
+background: #1a1a1a;
+border-radius: 8px;
+color: #66ccff;
+font-weight: 600;
+}
+.virtual-marks-grid {
+display: flex;
+flex-direction: column;
+gap: 0.5rem;
+}
+.virtual-mark-item {
+display: flex;
+gap: 0.5rem;
+}
+.virtual-mark-btn {
+flex: 1;
+padding: 0.75rem;
+border-radius: 10px;
+background: #1a1a2d;
+border: 2px solid #333366;
+color: #8888cc;
+cursor: pointer;
+text-align: left;
+transition: all 0.15s;
+}
+.virtual-mark-btn:active {
+transform: scale(0.98);
+}
+.virtual-mark-btn.dropped {
+background: #1a2d1a;
+border-color: #4caf50;
+color: #4caf50;
+}
+.virtual-mark-btn .mark-icon {
+font-size: 1.2rem;
+margin-bottom: 0.2rem;
+}
+.virtual-mark-btn .mark-name {
+font-weight: 700;
+font-size: 0.9rem;
+}
+.virtual-mark-btn .mark-coords {
+font-size: 0.75rem;
+opacity: 0.7;
+margin-top: 0.2rem;
+}
+.virtual-mark-clear {
+background: #3d1f1f;
+border: 1px solid #663333;
+color: #ff8888;
+width: 40px;
+border-radius: 8px;
+cursor: pointer;
+font-size: 1rem;
+}
+.virtual-race-options {
+display: flex;
+flex-direction: column;
+gap: 0.5rem;
+}
+.virtual-race-btn {
+padding: 0.75rem 1rem;
+border-radius: 10px;
+background: #1a1a1a;
+border: 2px solid #333;
+color: #888;
+cursor: pointer;
+text-align: left;
+transition: all 0.15s;
+}
+.virtual-race-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+.virtual-race-btn:not(:disabled):hover,
+.virtual-race-btn:not(:disabled):active {
+border-color: #555;
+}
+.virtual-race-btn.selected {
+background: #1a2d3a;
+border-color: #66ccff;
+color: #66ccff;
+}
+.virtual-race-btn .race-name {
+font-weight: 700;
+font-size: 1rem;
+}
+.virtual-race-btn .race-desc {
+font-size: 0.85rem;
+margin-top: 0.2rem;
+}
+.virtual-race-btn .race-req {
+font-size: 0.7rem;
+opacity: 0.6;
+margin-top: 0.3rem;
+}
+.virtual-start-btn {
+padding: 1rem;
+border-radius: 12px;
+background: #28a745;
+border: 2px solid #28a745;
+color: #fff;
+font-size: 1.1rem;
+font-weight: 700;
+cursor: pointer;
+margin-top: auto;
+}
+.virtual-start-btn:disabled {
+background: #333;
+border-color: #444;
+color: #666;
+cursor: not-allowed;
+}
+.virtual-start-btn:not(:disabled):active {
+transform: scale(0.98);
+background: #218838;
+}
+
 /* Race Summary Screen (Post-Race Strava-like) */
 #race-summary-screen {
 padding: 0;
@@ -3119,6 +3375,106 @@ Fix for Pixel 8 / Android:
 </div>
 </div>
 
+<!-- Virtual Racing Setup Screen -->
+<div id="virtual-setup-screen" class="screen">
+<div class="virtual-setup-topbar">
+<button onclick="closeVirtualSetup()">← Back</button>
+<div class="virtual-setup-title">Virtual Racing Setup</div>
+<button onclick="clearVirtualSetup()" class="virtual-clear-all-btn">Clear All</button>
+</div>
+
+<div class="virtual-setup-body">
+<!-- GPS Status -->
+<div class="virtual-gps-status" id="virtual-gps-status">
+<span class="virtual-gps-indicator"></span>
+<span id="virtual-gps-text">Waiting for GPS...</span>
+</div>
+
+<!-- Start/Finish Line Section -->
+<div class="virtual-section">
+<div class="virtual-section-header">
+<span class="virtual-section-title">Start/Finish Line</span>
+<button class="virtual-clear-btn" onclick="clearVirtualLine()">Clear Line</button>
+</div>
+<div class="virtual-line-pins">
+<button class="virtual-pin-btn pin1" id="virtual-pin1-btn" onclick="dropVirtualLinePin(1)">
+<div>📍 Pin 1</div>
+<div class="pin-label" id="virtual-pin1-status">Tap to drop</div>
+</button>
+<button class="virtual-pin-btn pin2" id="virtual-pin2-btn" onclick="dropVirtualLinePin(2)">
+<div>📍 Pin 2</div>
+<div class="pin-label" id="virtual-pin2-status">Tap to drop</div>
+</button>
+</div>
+<div class="virtual-line-info" id="virtual-line-info" style="display: none;">
+<span id="virtual-line-length">—</span> m &bull; <span id="virtual-line-bearing">—</span>°
+</div>
+</div>
+
+<!-- Virtual Marks Section -->
+<div class="virtual-section">
+<div class="virtual-section-header">
+<span class="virtual-section-title">Virtual Marks</span>
+</div>
+<div class="virtual-marks-grid">
+<div class="virtual-mark-item">
+<button class="virtual-mark-btn" id="virtual-mark1-btn" onclick="dropVirtualMark(1)">
+<div class="mark-icon">🔺</div>
+<div class="mark-name">VM1 - Windward</div>
+<div class="mark-coords" id="virtual-mark1-coords">Tap to drop</div>
+</button>
+<button class="virtual-mark-clear" id="virtual-mark1-clear" onclick="clearVirtualMark(1)" style="display: none;">✕</button>
+</div>
+<div class="virtual-mark-item">
+<button class="virtual-mark-btn" id="virtual-mark2-btn" onclick="dropVirtualMark(2)">
+<div class="mark-icon">🔸</div>
+<div class="mark-name">VM2</div>
+<div class="mark-coords" id="virtual-mark2-coords">Tap to drop</div>
+</button>
+<button class="virtual-mark-clear" id="virtual-mark2-clear" onclick="clearVirtualMark(2)" style="display: none;">✕</button>
+</div>
+<div class="virtual-mark-item">
+<button class="virtual-mark-btn" id="virtual-mark3-btn" onclick="dropVirtualMark(3)">
+<div class="mark-icon">🔹</div>
+<div class="mark-name">VM3</div>
+<div class="mark-coords" id="virtual-mark3-coords">Tap to drop</div>
+</button>
+<button class="virtual-mark-clear" id="virtual-mark3-clear" onclick="clearVirtualMark(3)" style="display: none;">✕</button>
+</div>
+</div>
+</div>
+
+<!-- Race Selection Section -->
+<div class="virtual-section">
+<div class="virtual-section-header">
+<span class="virtual-section-title">Select Race Course</span>
+</div>
+<div class="virtual-race-options">
+<button class="virtual-race-btn" id="virtual-race1-btn" onclick="selectVirtualRace('race1')" disabled>
+<div class="race-name">Race 1</div>
+<div class="race-desc">VM1 → VM2 → Finish</div>
+<div class="race-req">Requires 2 marks</div>
+</button>
+<button class="virtual-race-btn" id="virtual-race2-btn" onclick="selectVirtualRace('race2')" disabled>
+<div class="race-name">Race 2</div>
+<div class="race-desc">VM1 → VM2 → Finish</div>
+<div class="race-req">Requires 2 marks</div>
+</button>
+<button class="virtual-race-btn" id="virtual-race3-btn" onclick="selectVirtualRace('race3')" disabled>
+<div class="race-name">Race 3</div>
+<div class="race-desc">VM1 → VM2 → VM3 → Finish</div>
+<div class="race-req">Requires 3 marks</div>
+</button>
+</div>
+</div>
+
+<!-- Start Virtual Race Button -->
+<button class="virtual-start-btn" id="virtual-start-btn" onclick="startVirtualRace()" disabled>
+🚀 Start Virtual Race
+</button>
+</div>
+</div>
+
 <!-- Navigation Screen -->
 
 <div id="navigation-screen" class="screen">
@@ -3813,6 +4169,16 @@ isRunning: false,
 interval: null,
 startTime: null,
 pausedTime: 0
+},
+// Virtual Racing state
+virtualRacing: {
+    isActive: false,
+    startLine: {
+        pin1: null,  // { lat, lng, droppedAt }
+        pin2: null
+    },
+    marks: [],  // Up to 3: [{ lat, lng, name, droppedAt }, ...]
+    selectedRace: null  // 'race1', 'race2', or 'race3'
 }
 };
 
@@ -4979,6 +5345,9 @@ courseSets["Lough Derg Test Track"] = {
 "R": [["LD2","P"],["LD4","P"],["LD5","P"],["LD3","P"]]
 };
 
+// Virtual Racing - empty set, courses are generated dynamically
+courseSets["Virtual Racing"] = {};
+
 
 // The active set name (default = Saturday Hut Start).
 let activeCourseSet = "Saturday Hut Start";
@@ -5020,6 +5389,12 @@ sel.appendChild(opt);
 // current selection.
 function selectCourseSet(setName) {
 if (!courseSets[setName]) return;
+
+// Special handling for Virtual Racing - open setup screen instead
+if (setName === 'Virtual Racing') {
+    openVirtualRacingSetup();
+    return;
+}
 
 
 // Reflect choice in the <select> (in case called programmatically).
@@ -5113,6 +5488,10 @@ app.raceStartPosition = null;
 stopTimer();
 resetTimer();
 
+// Clean up virtual racing if active
+if (app.virtualRacing.isActive) {
+    cleanupVirtualRacing();
+}
 
 stopGPSTracking();
 
@@ -8857,6 +9236,24 @@ showStatus(`Mark rounded - now on current leg`, 'status-gps');
 updateNextLegIndicator();
 }
 
+// Virtual Racing: Auto-detect finish line crossing when all marks passed
+if (app.virtualRacing.isActive &&
+    app.currentBuoyIndex >= app.currentCourse.data.length &&
+    app.previousPosition &&
+    !app.raceFinished) {
+    const { startLine } = app.virtualRacing;
+    if (startLine.pin1 && startLine.pin2) {
+        const prevPos = { lat: app.previousPosition.latitude, lng: app.previousPosition.longitude };
+        const currPos = { lat: app.userPosition.latitude, lng: app.userPosition.longitude };
+        if (checkLineCrossing(prevPos, currPos, startLine.pin1, startLine.pin2)) {
+            console.log('Virtual Racing: Finish line crossed!');
+            showStatus('🏁 FINISH LINE CROSSED!', 'status-gps');
+            finishRace();
+            return;
+        }
+    }
+}
+
 
 const bearing = calculateBearing(
 app.userPosition.latitude, app.userPosition.longitude,
@@ -9485,6 +9882,418 @@ console.log(`Course changed: ${prevCourseName} → ${modalSelectedCourse.name} (
 // ── End Change Course Modal ────────────────────────────────────────────
 
 
+// ── Virtual Racing Functions ────────────────────────────────────────────
+
+// GPS tracking for virtual setup screen
+let virtualSetupGpsWatchId = null;
+
+function openVirtualRacingSetup() {
+    console.log('Opening Virtual Racing Setup');
+    showScreen('virtual-setup-screen');
+
+    // Start GPS tracking for position drops
+    startVirtualSetupGPS();
+
+    // Update UI state
+    updateVirtualSetupUI();
+}
+
+function closeVirtualSetup() {
+    console.log('Closing Virtual Racing Setup');
+    stopVirtualSetupGPS();
+    showScreen('home-screen');
+}
+
+function startVirtualSetupGPS() {
+    if (!('geolocation' in navigator)) {
+        updateVirtualGPSStatus('GPS not available', 'error');
+        return;
+    }
+
+    updateVirtualGPSStatus('Acquiring GPS...', 'waiting');
+
+    virtualSetupGpsWatchId = navigator.geolocation.watchPosition(
+        (position) => {
+            app.userPosition = position.coords;
+            const accuracy = Math.round(position.coords.accuracy);
+            if (accuracy < 20) {
+                updateVirtualGPSStatus(`GPS Ready (±${accuracy}m)`, 'good');
+            } else if (accuracy < 50) {
+                updateVirtualGPSStatus(`GPS Fair (±${accuracy}m)`, 'fair');
+            } else {
+                updateVirtualGPSStatus(`GPS Poor (±${accuracy}m)`, 'poor');
+            }
+        },
+        (error) => {
+            console.error('Virtual Setup GPS error:', error);
+            updateVirtualGPSStatus('GPS Error - Go outdoors', 'error');
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 1000
+        }
+    );
+}
+
+function stopVirtualSetupGPS() {
+    if (virtualSetupGpsWatchId !== null) {
+        navigator.geolocation.clearWatch(virtualSetupGpsWatchId);
+        virtualSetupGpsWatchId = null;
+    }
+}
+
+function updateVirtualGPSStatus(text, status) {
+    const indicator = document.querySelector('.virtual-gps-indicator');
+    const textEl = document.getElementById('virtual-gps-text');
+
+    if (textEl) textEl.textContent = text;
+    if (indicator) {
+        indicator.classList.remove('active', 'poor');
+        if (status === 'good') indicator.classList.add('active');
+        else if (status === 'fair' || status === 'poor') indicator.classList.add('poor');
+    }
+}
+
+function dropVirtualLinePin(pinNumber) {
+    if (!app.userPosition) {
+        alert('Waiting for GPS position. Please try again.');
+        return;
+    }
+
+    const pin = {
+        lat: app.userPosition.latitude,
+        lng: app.userPosition.longitude,
+        droppedAt: Date.now()
+    };
+
+    if (pinNumber === 1) {
+        app.virtualRacing.startLine.pin1 = pin;
+        console.log('Virtual line pin 1 dropped:', pin);
+    } else {
+        app.virtualRacing.startLine.pin2 = pin;
+        console.log('Virtual line pin 2 dropped:', pin);
+    }
+
+    updateVirtualSetupUI();
+}
+
+function clearVirtualLine() {
+    app.virtualRacing.startLine.pin1 = null;
+    app.virtualRacing.startLine.pin2 = null;
+    updateVirtualSetupUI();
+}
+
+function dropVirtualMark(markNumber) {
+    if (!app.userPosition) {
+        alert('Waiting for GPS position. Please try again.');
+        return;
+    }
+
+    const markNames = ['Windward Mark', 'Mark 2', 'Mark 3'];
+    const mark = {
+        lat: app.userPosition.latitude,
+        lng: app.userPosition.longitude,
+        name: markNames[markNumber - 1] || `Mark ${markNumber}`,
+        droppedAt: Date.now()
+    };
+
+    // Ensure marks array is large enough and set the mark at the right index
+    while (app.virtualRacing.marks.length < markNumber) {
+        app.virtualRacing.marks.push(null);
+    }
+    app.virtualRacing.marks[markNumber - 1] = mark;
+
+    console.log(`Virtual mark ${markNumber} dropped:`, mark);
+    updateVirtualSetupUI();
+}
+
+function clearVirtualMark(markNumber) {
+    if (markNumber <= app.virtualRacing.marks.length) {
+        app.virtualRacing.marks[markNumber - 1] = null;
+    }
+
+    // Re-check if selected race is still valid
+    checkRaceAvailability();
+    updateVirtualSetupUI();
+}
+
+function clearVirtualSetup() {
+    app.virtualRacing.startLine.pin1 = null;
+    app.virtualRacing.startLine.pin2 = null;
+    app.virtualRacing.marks = [];
+    app.virtualRacing.selectedRace = null;
+
+    // Remove any virtual buoys
+    cleanupVirtualBuoys();
+
+    updateVirtualSetupUI();
+}
+
+function cleanupVirtualBuoys() {
+    // Remove VM1, VM2, VM3, VFINISH from buoys
+    delete buoys['VM1'];
+    delete buoys['VM2'];
+    delete buoys['VM3'];
+    delete buoys['VFINISH'];
+}
+
+function selectVirtualRace(raceId) {
+    app.virtualRacing.selectedRace = raceId;
+    updateVirtualSetupUI();
+}
+
+function checkRaceAvailability() {
+    const marks = app.virtualRacing.marks;
+    const markCount = marks.filter(m => m !== null).length;
+
+    // If currently selected race is no longer valid, deselect it
+    if (app.virtualRacing.selectedRace === 'race3' && markCount < 3) {
+        app.virtualRacing.selectedRace = null;
+    } else if (app.virtualRacing.selectedRace && markCount < 2) {
+        app.virtualRacing.selectedRace = null;
+    }
+}
+
+function updateVirtualSetupUI() {
+    const { startLine, marks, selectedRace } = app.virtualRacing;
+
+    // Update pin buttons
+    const pin1Btn = document.getElementById('virtual-pin1-btn');
+    const pin2Btn = document.getElementById('virtual-pin2-btn');
+    const pin1Status = document.getElementById('virtual-pin1-status');
+    const pin2Status = document.getElementById('virtual-pin2-status');
+
+    if (pin1Btn && pin1Status) {
+        if (startLine.pin1) {
+            pin1Btn.classList.add('dropped');
+            pin1Status.textContent = `${startLine.pin1.lat.toFixed(5)}, ${startLine.pin1.lng.toFixed(5)}`;
+        } else {
+            pin1Btn.classList.remove('dropped');
+            pin1Status.textContent = 'Tap to drop';
+        }
+    }
+
+    if (pin2Btn && pin2Status) {
+        if (startLine.pin2) {
+            pin2Btn.classList.add('dropped');
+            pin2Status.textContent = `${startLine.pin2.lat.toFixed(5)}, ${startLine.pin2.lng.toFixed(5)}`;
+        } else {
+            pin2Btn.classList.remove('dropped');
+            pin2Status.textContent = 'Tap to drop';
+        }
+    }
+
+    // Update line info
+    const lineInfo = document.getElementById('virtual-line-info');
+    if (lineInfo) {
+        if (startLine.pin1 && startLine.pin2) {
+            const dist = calculateDistance(startLine.pin1.lat, startLine.pin1.lng, startLine.pin2.lat, startLine.pin2.lng);
+            const bearing = calculateBearing(startLine.pin1.lat, startLine.pin1.lng, startLine.pin2.lat, startLine.pin2.lng);
+            document.getElementById('virtual-line-length').textContent = Math.round(dist);
+            document.getElementById('virtual-line-bearing').textContent = Math.round(bearing);
+            lineInfo.style.display = 'block';
+        } else {
+            lineInfo.style.display = 'none';
+        }
+    }
+
+    // Update mark buttons
+    for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`virtual-mark${i}-btn`);
+        const coords = document.getElementById(`virtual-mark${i}-coords`);
+        const clearBtn = document.getElementById(`virtual-mark${i}-clear`);
+        const mark = marks[i - 1];
+
+        if (btn && coords) {
+            if (mark) {
+                btn.classList.add('dropped');
+                coords.textContent = `${mark.lat.toFixed(5)}, ${mark.lng.toFixed(5)}`;
+                if (clearBtn) clearBtn.style.display = 'block';
+            } else {
+                btn.classList.remove('dropped');
+                coords.textContent = 'Tap to drop';
+                if (clearBtn) clearBtn.style.display = 'none';
+            }
+        }
+    }
+
+    // Update race selection availability
+    const markCount = marks.filter(m => m !== null).length;
+    const hasLine = startLine.pin1 && startLine.pin2;
+
+    const race1Btn = document.getElementById('virtual-race1-btn');
+    const race2Btn = document.getElementById('virtual-race2-btn');
+    const race3Btn = document.getElementById('virtual-race3-btn');
+
+    if (race1Btn) {
+        race1Btn.disabled = markCount < 2;
+        race1Btn.classList.toggle('selected', selectedRace === 'race1');
+    }
+    if (race2Btn) {
+        race2Btn.disabled = markCount < 2;
+        race2Btn.classList.toggle('selected', selectedRace === 'race2');
+    }
+    if (race3Btn) {
+        race3Btn.disabled = markCount < 3;
+        race3Btn.classList.toggle('selected', selectedRace === 'race3');
+    }
+
+    // Update start button
+    const startBtn = document.getElementById('virtual-start-btn');
+    if (startBtn) {
+        const canStart = hasLine && selectedRace !== null;
+        startBtn.disabled = !canStart;
+    }
+}
+
+function generateVirtualCourse() {
+    const { startLine, marks, selectedRace } = app.virtualRacing;
+
+    // Add virtual marks to buoys object
+    if (marks[0]) {
+        buoys['VM1'] = { coords: [marks[0].lat, marks[0].lng], name: 'Windward Mark', color: 'Purple' };
+    }
+    if (marks[1]) {
+        buoys['VM2'] = { coords: [marks[1].lat, marks[1].lng], name: 'Mark 2', color: 'Purple' };
+    }
+    if (marks[2]) {
+        buoys['VM3'] = { coords: [marks[2].lat, marks[2].lng], name: 'Mark 3', color: 'Purple' };
+    }
+
+    // Create virtual finish mark at midpoint of line
+    const finishLat = (startLine.pin1.lat + startLine.pin2.lat) / 2;
+    const finishLng = (startLine.pin1.lng + startLine.pin2.lng) / 2;
+    buoys['VFINISH'] = { coords: [finishLat, finishLng], name: 'Finish Line', color: 'Checkered' };
+
+    // Generate course based on selected race
+    let courseData;
+    switch (selectedRace) {
+        case 'race1':
+            courseData = [['VM1', 'P'], ['VM2', 'P'], ['VFINISH', 'P']];
+            break;
+        case 'race2':
+            courseData = [['VM1', 'P'], ['VM2', 'P'], ['VFINISH', 'P']];
+            break;
+        case 'race3':
+            courseData = [['VM1', 'P'], ['VM2', 'P'], ['VM3', 'P'], ['VFINISH', 'P']];
+            break;
+        default:
+            courseData = [];
+    }
+
+    // Add to courseSets so course generation works
+    courseSets['Virtual Racing']['VR-' + selectedRace.toUpperCase()] = courseData;
+
+    return {
+        name: 'Virtual Race - ' + selectedRace.toUpperCase(),
+        data: courseData
+    };
+}
+
+function startVirtualRace() {
+    if (!app.virtualRacing.selectedRace) {
+        alert('Please select a race course first.');
+        return;
+    }
+
+    if (!app.virtualRacing.startLine.pin1 || !app.virtualRacing.startLine.pin2) {
+        alert('Please drop both start/finish line pins.');
+        return;
+    }
+
+    console.log('Starting Virtual Race');
+
+    // Stop setup GPS tracking
+    stopVirtualSetupGPS();
+
+    // Mark virtual racing as active
+    app.virtualRacing.isActive = true;
+
+    // Generate the course
+    const course = generateVirtualCourse();
+
+    // Set the active course set to Virtual Racing
+    setActiveCourseSet('Virtual Racing');
+
+    // Set the selected course
+    app.selectedCourse = course;
+
+    // Update prestart screen with course info
+    const prestartCourseName = document.getElementById('prestart-course-name');
+    if (prestartCourseName) {
+        prestartCourseName.textContent = course.name;
+    }
+
+    // Prepare course data for navigation
+    const firstMark = course.data[0];
+    const buoyCode = firstMark[0];
+    const buoy = buoys[buoyCode];
+    if (buoy) {
+        const prestartMarkName = document.getElementById('prestart-mark-name');
+        const prestartMarkSide = document.getElementById('prestart-mark-side');
+        const prestartMarkLine = document.getElementById('prestart-mark-line');
+
+        if (prestartMarkName) prestartMarkName.textContent = buoy.name || buoyCode;
+        if (prestartMarkSide) prestartMarkSide.textContent = firstMark[1] === 'P' ? '🔴 Port' : '🟢 Starboard';
+        if (prestartMarkLine) prestartMarkLine.style.display = 'block';
+    }
+
+    // Show nav box on prestart
+    const navBox = document.getElementById('prestart-nav-box');
+    if (navBox) navBox.style.display = 'flex';
+
+    // Show prestart screen
+    showScreen('prestart-screen');
+
+    console.log('Virtual race setup complete, showing prestart screen');
+}
+
+// Line crossing detection using cross product
+function checkLineCrossing(prevPos, currPos, linePin1, linePin2) {
+    if (!prevPos || !currPos || !linePin1 || !linePin2) return false;
+
+    // Line segment: P1 to P2
+    // Movement segment: prevPos to currPos
+    // Use cross product to detect intersection
+
+    const d1x = linePin2.lng - linePin1.lng;
+    const d1y = linePin2.lat - linePin1.lat;
+    const d2x = currPos.lng - prevPos.lng;
+    const d2y = currPos.lat - prevPos.lat;
+
+    const cross = d1x * d2y - d1y * d2x;
+
+    if (Math.abs(cross) < 1e-10) return false; // Parallel lines
+
+    const t1x = prevPos.lng - linePin1.lng;
+    const t1y = prevPos.lat - linePin1.lat;
+
+    const t = (t1x * d2y - t1y * d2x) / cross;
+    const u = (t1x * d1y - t1y * d1x) / cross;
+
+    // Check if intersection point is within both segments
+    return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
+function cleanupVirtualRacing() {
+    console.log('Cleaning up Virtual Racing');
+
+    app.virtualRacing.isActive = false;
+    app.virtualRacing.startLine.pin1 = null;
+    app.virtualRacing.startLine.pin2 = null;
+    app.virtualRacing.marks = [];
+    app.virtualRacing.selectedRace = null;
+
+    // Remove virtual buoys
+    cleanupVirtualBuoys();
+
+    // Clear any virtual courses from the course set
+    courseSets['Virtual Racing'] = {};
+}
+// ── End Virtual Racing Functions ────────────────────────────────────────
+
+
 // Export functions to window
 window.showScreen = showScreen;
 window.returnToHome = returnToHome;
@@ -9528,6 +10337,16 @@ window.closeTrimmerMapPopup = closeTrimmerMapPopup;
 window.closeTrimmerView = closeTrimmerView;
 window.performExitTrimmer = performExitTrimmer;
 window.cancelExitTrimmer = cancelExitTrimmer;
+// Export virtual racing functions
+window.openVirtualRacingSetup = openVirtualRacingSetup;
+window.closeVirtualSetup = closeVirtualSetup;
+window.dropVirtualLinePin = dropVirtualLinePin;
+window.clearVirtualLine = clearVirtualLine;
+window.dropVirtualMark = dropVirtualMark;
+window.clearVirtualMark = clearVirtualMark;
+window.clearVirtualSetup = clearVirtualSetup;
+window.selectVirtualRace = selectVirtualRace;
+window.startVirtualRace = startVirtualRace;
 
 // Press Escape to close the trimmer map popup
 document.addEventListener('keydown', function(e) {
