@@ -5345,8 +5345,6 @@ courseSets["Lough Derg Test Track"] = {
 "R": [["LD2","P"],["LD4","P"],["LD5","P"],["LD3","P"]]
 };
 
-// Virtual Racing - empty set, courses are generated dynamically
-courseSets["Virtual Racing"] = {};
 
 
 // The active set name (default = Saturday Hut Start).
@@ -5374,7 +5372,14 @@ function populateCourseSetDropdown() {
 const sel = document.getElementById('course-set-select');
 if (!sel) return;
 sel.innerHTML = '';
-Object.keys(courseSets).forEach(setName => {
+// Ensure Virtual Racing is added
+if (!courseSets["Virtual Racing"]) {
+    courseSets["Virtual Racing"] = {};
+}
+const setNames = Object.keys(courseSets);
+// DEBUG: Show alert on mobile to verify course sets
+alert('Course sets: ' + setNames.join(', '));
+setNames.forEach(setName => {
 const opt = document.createElement('option');
 opt.value = setName;
 opt.textContent = setName;
