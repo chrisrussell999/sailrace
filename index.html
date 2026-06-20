@@ -3548,6 +3548,7 @@ Fix for Pixel 8 / Android:
 
 <div class="timer-duration-selector">
 
+<button id="timer-30min-btn" class="timer-duration-btn" onclick="setTimerDuration(1800)">30:00</button>
 <button id="timer-25min-btn" class="timer-duration-btn" onclick="setTimerDuration(1500)">25:00</button>
 <button id="timer-15min-btn" class="timer-duration-btn" onclick="setTimerDuration(900)">15:00</button>
 <button id="timer-10min-btn" class="timer-duration-btn active" onclick="setTimerDuration(600)">10:00</button>
@@ -7655,10 +7656,11 @@ if (arrowEl) arrowEl.style.opacity = text ? '0.4' : '0';
 
 if (!app.currentCourse) {
 nameEl.textContent = '—';
+nameEl.style.color = ''; // Reset color
 if (fullnameEl) fullnameEl.textContent = '';
 if (colorEl) { colorEl.textContent = ''; colorEl.style.display = 'none'; }
-sideEl.textContent = '—';
-sideEl.className = 'trimmer-mark-side';
+sideEl.textContent = '';
+sideEl.style.display = 'none';
 remainingEl.textContent = '—';
 setUpcomingEmpty('');
 if (hintEl) hintEl.textContent = 'No course loaded';
@@ -7680,12 +7682,11 @@ remainingEl.textContent = markDisplayText;
 
 if (app.currentBuoyIndex >= app.currentCourse.data.length) {
 nameEl.textContent = 'FINISH';
+nameEl.style.color = '#66ff88'; // Reset to green for finish
 if (fullnameEl) fullnameEl.textContent = 'Head to Finish Line!';
 if (colorEl) { colorEl.textContent = ''; colorEl.style.display = 'none'; }
-sideEl.textContent = 'All Marks Rounded';
-sideEl.className = 'trimmer-mark-side';
-sideEl.style.background = '#2a5a2a';
-sideEl.style.color = '#66ff88';
+sideEl.textContent = '';
+sideEl.style.display = 'none';
 setUpcomingEmpty('');
 if (hintEl) { hintEl.textContent = 'Press Finish Race when you cross the finish line'; hintEl.classList.add('complete'); }
 if (tapArea) tapArea.classList.add('disabled');
@@ -7726,10 +7727,11 @@ colorEl.style.color = '#fff';
 colorEl.style.display = 'none';
 }
 }
-sideEl.textContent = isPort ? 'PORT' : 'STARBOARD';
-sideEl.className = 'trimmer-mark-side ' + (isPort ? 'port' : 'starboard');
-sideEl.style.background = '';
-sideEl.style.color = '';
+// Hide PORT/STARBOARD text - color the mark name instead
+sideEl.textContent = '';
+sideEl.style.display = 'none';
+// Color the mark name based on rounding direction
+nameEl.style.color = isPort ? '#dc3545' : '#28a745'; // Red for port, Green for starboard
 if (hintEl) { hintEl.textContent = 'Hold anywhere for 1 second to mark passed'; hintEl.classList.remove('complete'); }
 if (tapArea) tapArea.classList.remove('disabled');
 // Hide the Finish Race button while marks remain
