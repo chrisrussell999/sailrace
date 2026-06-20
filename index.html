@@ -9,7 +9,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>SailRace - Navigation v2.2</title>
+<title>SailRace - Navigation v2.3</title>
 
 <!-- PWA Meta Tags -->
 
@@ -3891,7 +3891,7 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 </div>
 </div>
 <div class="trimmer-startline-mark">
-<div class="tsl-mark-label">First Mark</div>
+<div class="tsl-mark-label" id="trimmer-mark1-label">First Mark</div>
 <div class="tsl-mark-info">
 <span class="tsl-mark-bearing" id="trimmer-mark1-bearing">—°</span>
 <span class="tsl-mark-dist" id="trimmer-mark1-dist">— nm</span>
@@ -7242,7 +7242,13 @@ bearingInfoEl.innerHTML = '';
 
 // First mark info for trimmer panel
 if (app.currentCourse && app.currentCourse.data && app.currentCourse.data.length > 0) {
-const [firstMarkName] = app.currentCourse.data[0];
+const [firstMarkName, firstMarkDirection] = app.currentCourse.data[0];
+const firstMarkIsPort = firstMarkDirection && firstMarkDirection.toLowerCase() === 'p';
+const trimmerMark1Label = document.getElementById('trimmer-mark1-label');
+if (trimmerMark1Label) {
+trimmerMark1Label.textContent = firstMarkName;
+trimmerMark1Label.style.color = firstMarkIsPort ? '#dc3545' : '#28a745'; // Red for port, Green for starboard
+}
 if (buoys[firstMarkName]) {
 const [markLat, markLng] = buoys[firstMarkName].coords;
 const distM = calculateDistance(
@@ -7741,12 +7747,16 @@ if (finishBtn) finishBtn.classList.remove('visible');
 // Upcoming mark info: name on top, range & bearing from current mark below
 const afterIndex = app.currentBuoyIndex + 1;
 if (afterIndex < app.currentCourse.data.length) {
-const [afterName] = app.currentCourse.data[afterIndex];
+const [afterName, afterDirection] = app.currentCourse.data[afterIndex];
 const thisBuoy = buoys[buoyName];
 const afterBuoy = buoys[afterName];
+const afterIsPort = afterDirection && afterDirection.toLowerCase() === 'p';
 if (upcomingWrap) upcomingWrap.classList.remove('empty');
 if (arrowEl) arrowEl.style.opacity = '';
-if (upcomingNameEl) upcomingNameEl.textContent = afterBuoy ? `${afterName} - ${afterBuoy.name}` : afterName;
+if (upcomingNameEl) {
+upcomingNameEl.textContent = afterBuoy ? `${afterName} - ${afterBuoy.name}` : afterName;
+upcomingNameEl.style.color = afterIsPort ? '#dc3545' : '#28a745'; // Red for port, Green for starboard
+}
 if (upcomingStatsEl) {
 if (thisBuoy && afterBuoy) {
 const legDist = calculateDistance(thisBuoy.coords[0], thisBuoy.coords[1], afterBuoy.coords[0], afterBuoy.coords[1]) / 1852;
@@ -10368,7 +10378,7 @@ closeTrimmerMapPopup();
 
 // Initialize when page loads with mobile optimizations
 document.addEventListener('DOMContentLoaded', function() {
-console.log('=== SailRace Mobile App Starting (v2.2 - With Virtual Racing) ===');
+console.log('=== SailRace Mobile App Starting (v2.3 - Mark Colors) ===');
 console.log('🚨 PIXEL 8 GPS FIX ACTIVE: Using aggressive 1-second polling');
 console.log('🧭 CMG (Course Made Good) speed calculation added');
 console.log('⏱️ 10-minute race countdown timer added');
