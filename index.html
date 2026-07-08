@@ -315,6 +315,21 @@ text-align: center;
 flex-shrink: 0;
 }
 
+/* Embedded Mini-Map in Trimmer View */
+.trimmer-minimap-container {
+height: 140px;
+width: 100%;
+border-radius: 8px;
+overflow: hidden;
+border: 1px solid #444;
+background: #1a1a1a;
+flex-shrink: 0;
+}
+#trimmer-minimap {
+width: 100%;
+height: 100%;
+}
+
 /* Big tap area - long-press anywhere marks the next buoy */
 .trimmer-tap-area {
 flex: 1;
@@ -1817,6 +1832,47 @@ background: var(--button-hover);
 display: none;
 }
 
+/* Map Navigation Info Panel */
+.map-nav-info-panel {
+position: absolute;
+bottom: 10px;
+left: 10px;
+background: rgba(0, 0, 0, 0.85);
+border: 1px solid #444;
+border-radius: 8px;
+padding: 0.5rem 0.75rem;
+font-size: 0.8rem;
+z-index: 1000;
+color: #fff;
+}
+.map-nav-row {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+margin-bottom: 0.25rem;
+}
+.map-nav-row:last-child {
+margin-bottom: 0;
+}
+.map-nav-label {
+color: #888;
+font-size: 0.7rem;
+min-width: 32px;
+}
+.map-nav-mark {
+font-weight: 600;
+min-width: 40px;
+}
+.map-nav-mark.port {
+color: #dc3545;
+}
+.map-nav-mark.starboard {
+color: #28a745;
+}
+.map-nav-stats {
+color: #66ccff;
+font-family: monospace;
+}
 
 /* GPS Status on Map */
 .gps-status-badge {
@@ -3603,6 +3659,18 @@ Must follow course sequence - no skipping ahead!
 
 <div class="map-container-navigation">
 <div id="navigation-map"></div>
+<div class="map-nav-info-panel" id="map-nav-info-panel">
+<div class="map-nav-row">
+<span class="map-nav-label">Next:</span>
+<span class="map-nav-mark" id="map-nav-mark1">—</span>
+<span class="map-nav-stats" id="map-nav-stats1">— nm / —°</span>
+</div>
+<div class="map-nav-row">
+<span class="map-nav-label">Then:</span>
+<span class="map-nav-mark" id="map-nav-mark2">—</span>
+<span class="map-nav-stats" id="map-nav-stats2">— nm / —°</span>
+</div>
+</div>
 <div class="gps-status-badge" id="gps-status-badge">
 <div class="gps-status-main">
 <span class="gps-status-indicator" id="gps-indicator"></span>
@@ -3939,6 +4007,9 @@ Mark 1: <span class="pm-name" id="prestart-mark-name">—</span><span class="pm-
 <div class="trimmer-stat-value" id="trimmer-speed">—</div>
 <div class="trimmer-stat-unit">SOG · kt</div>
 </div>
+</div>
+<div class="trimmer-minimap-container">
+<div id="trimmer-minimap"></div>
 </div>
 <div class="trimmer-bottom">
 <div class="trimmer-stat">
@@ -6940,6 +7011,8 @@ console.log(`Marked buoy ${passedBuoyName} as passed. Current index: ${app.curre
 
 updateNavigationDisplay();
 
+// Update embedded mini-map course display
+updateTrimmerMiniMapCourse();
 
 if (app.userPosition) {
 updateNavigationInfo();
@@ -7336,6 +7409,11 @@ attachTimerBoxPressHandlers();
 revealTrimmerBar();
 // Enter fullscreen to hide browser address bar / bottom bar
 enterTrimmerFullscreen();
+// Initialize embedded mini-map
+setTimeout(() => {
+initTrimmerMiniMap();
+updateTrimmerMiniMapPosition();
+}, 100);
 }
 
 // Auto-hide of the top bar (disabled — bar stays visible)
@@ -7385,6 +7463,8 @@ if (trimmerPopupRefreshTimer) {
 clearInterval(trimmerPopupRefreshTimer);
 trimmerPopupRefreshTimer = null;
 }
+// Clean up embedded mini-map
+destroyTrimmerMiniMap();
 const mapBackdrop = document.getElementById('trimmer-map-backdrop');
 if (mapBackdrop) mapBackdrop.classList.remove('active');
 // Leave fullscreen
@@ -7758,13 +7838,8 @@ upcomingNameEl.textContent = afterBuoy ? `${afterName} - ${afterBuoy.name}` : af
 upcomingNameEl.style.color = afterIsPort ? '#dc3545' : '#28a745'; // Red for port, Green for starboard
 }
 if (upcomingStatsEl) {
-if (thisBuoy && afterBuoy) {
-const legDist = calculateDistance(thisBuoy.coords[0], thisBuoy.coords[1], afterBuoy.coords[0], afterBuoy.coords[1]) / 1852;
-const legBrg = calculateBearing(thisBuoy.coords[0], thisBuoy.coords[1], afterBuoy.coords[0], afterBuoy.coords[1]);
-upcomingStatsEl.innerHTML = legDist.toFixed(2) + ' nm<span class="sep">·</span>' + Math.round(legBrg) + '°';
-} else {
-upcomingStatsEl.textContent = 'position unknown';
-}
+// Stats will be updated with boat-to-mark values by updateTrimmerStats when GPS is available
+upcomingStatsEl.textContent = app.userPosition ? '' : 'GPS…';
 }
 } else {
 setUpcomingEmpty('Finish next');
@@ -8137,6 +8212,27 @@ cmgEl.classList.remove('negative');
 }
 
 spdEl.textContent = values.speed > 0.01 ? values.speed.toFixed(1) : '0.0';
+
+// Update upcoming mark stats with boat-to-mark distance/bearing
+const upcomingStatsEl = document.getElementById('trimmer-upcoming-stats');
+if (upcomingStatsEl && app.userPosition && app.currentCourse) {
+const afterIndex = app.currentBuoyIndex + 1;
+if (afterIndex < app.currentCourse.data.length) {
+const [afterName] = app.currentCourse.data[afterIndex];
+const afterBuoy = buoys[afterName];
+if (afterBuoy) {
+const upcomingDist = calculateDistance(
+app.userPosition.latitude, app.userPosition.longitude,
+afterBuoy.coords[0], afterBuoy.coords[1]
+) / 1852;
+const upcomingBrg = calculateBearing(
+app.userPosition.latitude, app.userPosition.longitude,
+afterBuoy.coords[0], afterBuoy.coords[1]
+);
+upcomingStatsEl.innerHTML = upcomingDist.toFixed(2) + ' nm<span class="sep">·</span>' + Math.round(upcomingBrg) + '°';
+}
+}
+}
 }
 
 function updateTrimmerTimer() {
@@ -8363,6 +8459,88 @@ layers.push(arrowMarker);
 } catch (e) { console.error('Arrow pass error:', e); }
 
 return layers;
+}
+
+// ──────── Trimmer Embedded Mini-Map ────────
+// Small inline map shown within trimmer view
+let trimmerMiniMap = null;
+let trimmerMiniMapBoatMarker = null;
+let trimmerMiniMapCourseLayers = [];
+
+function initTrimmerMiniMap() {
+const container = document.getElementById('trimmer-minimap');
+if (!container || typeof L === 'undefined') return;
+
+if (trimmerMiniMap) {
+trimmerMiniMap.invalidateSize();
+return;
+}
+
+trimmerMiniMap = L.map(container, {
+zoomControl: false,
+attributionControl: false,
+dragging: false,
+scrollWheelZoom: false,
+doubleClickZoom: false,
+boxZoom: false,
+keyboard: false,
+tap: false,
+touchZoom: false
+});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+maxZoom: 18
+}).addTo(trimmerMiniMap);
+
+updateTrimmerMiniMapCourse();
+}
+
+function updateTrimmerMiniMapCourse() {
+if (!trimmerMiniMap || !app.currentCourse) return;
+
+// Clear old layers
+trimmerMiniMapCourseLayers.forEach(l => { try { trimmerMiniMap.removeLayer(l); } catch(e){} });
+trimmerMiniMapCourseLayers = [];
+
+// Render course using shared helper
+trimmerMiniMapCourseLayers = renderCourseLayers(trimmerMiniMap, app.currentCourse, {
+currentBuoyIndex: app.currentBuoyIndex,
+completedBuoys: app.completedBuoys
+});
+
+// Fit to course bounds
+const coords = app.currentCourse.data
+.map(([name]) => buoys[name] ? buoys[name].coords : null)
+.filter(Boolean);
+if (coords.length > 0) {
+trimmerMiniMap.fitBounds(coords, { padding: [15, 15] });
+}
+}
+
+function updateTrimmerMiniMapPosition() {
+if (!trimmerMiniMap || !app.userPosition) return;
+
+const pos = [app.userPosition.latitude, app.userPosition.longitude];
+
+if (!trimmerMiniMapBoatMarker) {
+trimmerMiniMapBoatMarker = L.circleMarker(pos, {
+radius: 6,
+fillColor: '#007bff',
+fillOpacity: 1,
+color: '#fff',
+weight: 2
+}).addTo(trimmerMiniMap);
+} else {
+trimmerMiniMapBoatMarker.setLatLng(pos);
+}
+}
+
+function destroyTrimmerMiniMap() {
+if (trimmerMiniMap) {
+trimmerMiniMap.remove();
+trimmerMiniMap = null;
+trimmerMiniMapBoatMarker = null;
+trimmerMiniMapCourseLayers = [];
+}
 }
 
 // ──────── Trimmer Map Popup ────────
@@ -9418,6 +9596,63 @@ cmg: app.cmgSpeed,
 speed: app.averageSpeed,
 accuracyWarning
 });
+
+// Update embedded mini-map position
+updateTrimmerMiniMapPosition();
+
+// Update map navigation info panel
+updateMapNavInfo();
+}
+
+// Update the map navigation info panel with bearing/distance to next two marks
+function updateMapNavInfo() {
+const mark1El = document.getElementById('map-nav-mark1');
+const stats1El = document.getElementById('map-nav-stats1');
+const mark2El = document.getElementById('map-nav-mark2');
+const stats2El = document.getElementById('map-nav-stats2');
+
+if (!mark1El || !app.userPosition || !app.currentCourse) return;
+
+// Current mark (next mark we're sailing to)
+if (app.currentBuoyIndex < app.currentCourse.data.length) {
+const [markName, direction] = app.currentCourse.data[app.currentBuoyIndex];
+const markBuoy = buoys[markName];
+const isPort = direction && direction.toLowerCase() === 'p';
+mark1El.textContent = markName;
+mark1El.className = 'map-nav-mark ' + (isPort ? 'port' : 'starboard');
+if (markBuoy) {
+const dist = calculateDistance(app.userPosition.latitude, app.userPosition.longitude, markBuoy.coords[0], markBuoy.coords[1]) / 1852;
+const brg = calculateBearing(app.userPosition.latitude, app.userPosition.longitude, markBuoy.coords[0], markBuoy.coords[1]);
+stats1El.textContent = dist.toFixed(2) + ' nm / ' + Math.round(brg) + '°';
+} else {
+stats1El.textContent = '— nm / —°';
+}
+} else {
+mark1El.textContent = 'Finish';
+mark1El.className = 'map-nav-mark';
+stats1El.textContent = '—';
+}
+
+// Next mark (mark after current)
+const afterIndex = app.currentBuoyIndex + 1;
+if (afterIndex < app.currentCourse.data.length) {
+const [afterName, afterDirection] = app.currentCourse.data[afterIndex];
+const afterBuoy = buoys[afterName];
+const afterIsPort = afterDirection && afterDirection.toLowerCase() === 'p';
+mark2El.textContent = afterName;
+mark2El.className = 'map-nav-mark ' + (afterIsPort ? 'port' : 'starboard');
+if (afterBuoy) {
+const dist = calculateDistance(app.userPosition.latitude, app.userPosition.longitude, afterBuoy.coords[0], afterBuoy.coords[1]) / 1852;
+const brg = calculateBearing(app.userPosition.latitude, app.userPosition.longitude, afterBuoy.coords[0], afterBuoy.coords[1]);
+stats2El.textContent = dist.toFixed(2) + ' nm / ' + Math.round(brg) + '°';
+} else {
+stats2El.textContent = '— nm / —°';
+}
+} else {
+mark2El.textContent = app.currentBuoyIndex >= app.currentCourse.data.length ? '—' : 'Finish';
+mark2El.className = 'map-nav-mark';
+stats2El.textContent = '—';
+}
 }
 
 
@@ -10378,21 +10613,11 @@ closeTrimmerMapPopup();
 
 // Initialize when page loads with mobile optimizations
 document.addEventListener('DOMContentLoaded', function() {
-console.log('=== SailRace Mobile App Starting (v3 - Mark Colors) ===');
-console.log('🚨 PIXEL 8 GPS FIX ACTIVE: Using aggressive 1-second polling');
-console.log('🧭 CMG (Course Made Good) speed calculation added');
-console.log('⏱️ 10-minute race countdown timer added');
-console.log('⚙️ Settings control for map overlay buttons added');
-
 
 // Load settings from localStorage
 loadSettings();
 
-
-console.log('Initializing course selection...');
 loadCourseSelection();
-console.log('Courses loaded:', Object.keys(predefinedCourses).length, 'courses');
-console.log('Buoys configured:', Object.keys(buoys).length, 'buoys');
 
 
 // Initialize timer display
@@ -10400,20 +10625,15 @@ updateTimerDisplay();
 
 
 // Check if Leaflet is loaded
-if (typeof L !== 'undefined') {
-console.log('✓ Leaflet library loaded successfully');
-} else {
-console.error('✗ Leaflet library failed to load - maps will not work');
+if (typeof L === 'undefined') {
+console.error('Leaflet library failed to load - maps will not work');
 }
-
 
 // Handle orientation changes
 window.addEventListener('orientationchange', function() {
-console.log('Orientation changed');
 setTimeout(() => {
 if (app.map) {
 app.map.invalidateSize();
-console.log('Map size updated for orientation change');
 }
 }, 500);
 });
@@ -10424,7 +10644,6 @@ document.addEventListener('visibilitychange', function() {
 if (!document.hidden && app.map) {
 setTimeout(() => {
 app.map.invalidateSize();
-console.log('Map size updated after visibility change');
 }, 100);
 }
 });
