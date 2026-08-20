@@ -13,6 +13,7 @@
 
 <!-- PWA Meta Tags -->
 
+
 <meta name="theme-color" content="#1a1a1a">
 <meta name="description" content="Sailing race course navigation">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2193,6 +2194,11 @@ opacity: 0.7;
 color: var(--accent-blue);
 }
 
+.mark-color {
+color: #888;
+font-size: 0.9em;
+}
+
 
 .course-info-item {
 display: none;
@@ -3606,6 +3612,7 @@ Fix for Pixel 8 / Android:
 
 <button id="timer-30min-btn" class="timer-duration-btn" onclick="setTimerDuration(1800)">30:00</button>
 <button id="timer-25min-btn" class="timer-duration-btn" onclick="setTimerDuration(1500)">25:00</button>
+<button id="timer-20min-btn" class="timer-duration-btn" onclick="setTimerDuration(1200)">20:00</button>
 <button id="timer-15min-btn" class="timer-duration-btn" onclick="setTimerDuration(900)">15:00</button>
 <button id="timer-10min-btn" class="timer-duration-btn active" onclick="setTimerDuration(600)">10:00</button>
 <button id="timer-6min-btn" class="timer-duration-btn" onclick="setTimerDuration(360)">6:00</button>
@@ -4273,7 +4280,9 @@ app.timer.startTime = null;
 
 
 // Update button states
+document.getElementById('timer-30min-btn').classList.toggle('active', seconds === 1800);
 document.getElementById('timer-25min-btn').classList.toggle('active', seconds === 1500);
+document.getElementById('timer-20min-btn').classList.toggle('active', seconds === 1200);
 document.getElementById('timer-15min-btn').classList.toggle('active', seconds === 900);
 document.getElementById('timer-10min-btn').classList.toggle('active', seconds === 600);
 document.getElementById('timer-6min-btn').classList.toggle('active', seconds === 360);
@@ -4637,27 +4646,27 @@ advancedControls.style.display = hasVisibleButton ? 'flex' : 'none';
 // Each buoy: { coords: [lat, lng], name: "Name", color: "Color" }
 const buoys = {
 "A": { coords: [53.306000, -6.150000], name: "Salthill", color: "Orange" },
-"B": { coords: [53.317000, -6.135833], name: "Saoirse", color: "Green" },
-"C": { coords: [53.324667, -6.143333], name: "Seapoint", color: "Black" },
+"B": { coords: [53.317000, -6.135833], name: "Seoirse", color: "Green" },
+"C": { coords: [53.324667, -6.143333], name: "Seapoint", color: "" },
 "D": { coords: [53.333333, -6.138333], name: "South Bull", color: "Orange" },
-"E": { coords: [53.337000, -6.124167], name: "South Bar", color: "Yellow/Black" },
-"F": { coords: [53.334667, -6.111667], name: "Bligh", color: "Yellow/Orange" },
-"G": { coords: [53.326667, -6.105000], name: "New Ross", color: "Yellow/Blk/Wh" },
+"E": { coords: [53.337000, -6.124167], name: "South Bar", color: "Black/White" },
+"F": { coords: [53.334667, -6.111667], name: "Bligh", color: "Green" },
+"G": { coords: [53.326667, -6.105000], name: "New Ross", color: "Yellow/Black" },
 "H": { coords: [53.312333, -6.129500], name: "Harbour", color: "Yellow" },
 "J": { coords: [53.318500, -6.109333], name: "Asgard", color: "Yellow/Black" },
 "K": { coords: [53.314167, -6.122833], name: "Boyd", color: "Orange" },
 "L": { coords: [53.314667, -6.152000], name: "Merrion", color: "Black/Yellow" },
 "M": { coords: [53.325833, -6.124667], name: "Middle", color: "Yellow" },
 "N": { coords: [53.304667, -6.104667], name: "Molly", color: "Yellow/Black" },
-"O": { coords: [53.306333, -6.132000], name: "Orange Start", color: "Orange" },
+"O": { coords: [53.306333, -6.132000], name: "Orange Start", color: "" },
 "P": { coords: [53.297000, -6.090000], name: "Poldy", color: "Yellow/Orange" },
 "Q": { coords: [53.290833, -6.093000], name: "Island", color: "Black" },
-"R": { coords: [53.288000, -6.102667], name: "Bulloch", color: "Orange" },
+"R": { coords: [53.288000, -6.102667], name: "Bulloch", color: "" },
 "S": { coords: [53.302667, -6.094667], name: "East", color: "Yellow/Green" },
 "T": { coords: [53.292000, -6.110633], name: "Battery", color: "Green/White" },
 "V": { coords: [53.301667, -6.114000], name: "Pier", color: "Orange" },
 "W": { coords: [53.295500, -6.118333], name: "Bay", color: "Black" },
-"X": { coords: [53.307167, -6.139000], name: "Turning", color: "Yellow" },
+"X": { coords: [53.307167, -6.139000], name: "Turning", color: "Yellow X on Mk" },
 "Y": { coords: [53.296333, -6.103833], name: "Omega", color: "Yellow" },
 "3": { coords: [53.304436, -6.135351], name: "Green", color: "Green" },
 
@@ -5624,8 +5633,9 @@ function formatCoursePreview(course) {
 return course.map(([buoyLetter, direction]) => {
 const buoyInfo = buoys[buoyLetter];
 const name = buoyInfo ? buoyInfo.name : '';
+const color = (buoyInfo && buoyInfo.color) ? ` [${buoyInfo.color}]` : '';
 const dir = direction.toLowerCase() === 'p' ? 'P' : 'S';
-return `${buoyLetter} ${name} (${dir})`;
+return `${buoyLetter} ${name}${color} (${dir})`;
 }).join(' → ');
 }
 
@@ -5634,9 +5644,10 @@ function formatCoursePreviewNumbered(course) {
 return course.map(([buoyLetter, direction], index) => {
 const buoyInfo = buoys[buoyLetter];
 const name = buoyInfo ? buoyInfo.name : '';
+const color = (buoyInfo && buoyInfo.color) ? ` <span class="mark-color">[${buoyInfo.color}]</span>` : '';
 const dir = direction.toLowerCase() === 'p' ? 'P' : 'S';
 const num = (index + 1).toString().padStart(2, ' ');
-return `<div class="course-mark-row"><span class="mark-num">${num}.</span> ${buoyLetter} ${name} <span class="mark-dir">(${dir})</span></div>`;
+return `<div class="course-mark-row"><span class="mark-num">${num}.</span> ${buoyLetter} ${name}${color} <span class="mark-dir">(${dir})</span></div>`;
 }).join('');
 }
 
@@ -6784,7 +6795,8 @@ const currentBuoy = app.currentCourse.data[app.currentBuoyIndex];
 if (currentBuoy) {
 const [buoyName, direction] = currentBuoy;
 const buoyInfo = buoys[buoyName];
-const displayName = buoyInfo ? `${buoyName} - ${buoyInfo.name}` : buoyName;
+const colorText = (buoyInfo && buoyInfo.color) ? ` (${buoyInfo.color})` : '';
+const displayName = buoyInfo ? `${buoyName} - ${buoyInfo.name}${colorText}` : buoyName;
 
 
 document.getElementById('next-buoy-name').textContent = `Next Mark: ${displayName}`;
@@ -6887,9 +6899,10 @@ const buoyItem = document.createElement('div');
 buoyItem.className = itemClass;
 
 
+const colorText = (buoy && buoy.color) ? ` (${buoy.color})` : '';
 buoyItem.innerHTML = `
 <div class="sequence-buoy-number ${isCompleted ? 'completed' : ''}">${index + 1}</div>
-<div class="sequence-buoy-name">${buoyName}${buoy ? ' - ' + buoy.name : ''}</div>
+<div class="sequence-buoy-name">${buoyName}${buoy ? ' - ' + buoy.name + colorText : ''}</div>
 <div class="sequence-buoy-direction ${directionClass}">${directionText}</div>
 <div class="sequence-buoy-status ${statusClass}">${statusText}</div>
 `;
@@ -6987,9 +7000,10 @@ const buoyItem = document.createElement('div');
 buoyItem.className = `buoy-simple-item ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}`;
 
 
+const colorText = (buoy && buoy.color) ? ` (${buoy.color})` : '';
 buoyItem.innerHTML = `
 <div class="buoy-simple-number ${isCompleted ? 'completed' : ''}">${index + 1}</div>
-<div class="buoy-simple-name">${buoyName}${buoy ? ' - ' + buoy.name : ''}</div>
+<div class="buoy-simple-name">${buoyName}${buoy ? ' - ' + buoy.name + colorText : ''}</div>
 <div class="buoy-simple-direction ${directionClass}">${directionText}</div>
 `;
 
@@ -7834,7 +7848,8 @@ const afterIsPort = afterDirection && afterDirection.toLowerCase() === 'p';
 if (upcomingWrap) upcomingWrap.classList.remove('empty');
 if (arrowEl) arrowEl.style.opacity = '';
 if (upcomingNameEl) {
-upcomingNameEl.textContent = afterBuoy ? `${afterName} - ${afterBuoy.name}` : afterName;
+const afterColor = (afterBuoy && afterBuoy.color) ? ` (${afterBuoy.color})` : '';
+upcomingNameEl.textContent = afterBuoy ? `${afterName} - ${afterBuoy.name}${afterColor}` : afterName;
 upcomingNameEl.style.color = afterIsPort ? '#dc3545' : '#28a745'; // Red for port, Green for starboard
 }
 if (upcomingStatsEl) {
@@ -9618,7 +9633,8 @@ if (app.currentBuoyIndex < app.currentCourse.data.length) {
 const [markName, direction] = app.currentCourse.data[app.currentBuoyIndex];
 const markBuoy = buoys[markName];
 const isPort = direction && direction.toLowerCase() === 'p';
-mark1El.textContent = markName;
+const markDisplay = markBuoy ? `${markName} ${markBuoy.name}` : markName;
+mark1El.textContent = markDisplay;
 mark1El.className = 'map-nav-mark ' + (isPort ? 'port' : 'starboard');
 if (markBuoy) {
 const dist = calculateDistance(app.userPosition.latitude, app.userPosition.longitude, markBuoy.coords[0], markBuoy.coords[1]) / 1852;
@@ -9639,7 +9655,8 @@ if (afterIndex < app.currentCourse.data.length) {
 const [afterName, afterDirection] = app.currentCourse.data[afterIndex];
 const afterBuoy = buoys[afterName];
 const afterIsPort = afterDirection && afterDirection.toLowerCase() === 'p';
-mark2El.textContent = afterName;
+const afterDisplay = afterBuoy ? `${afterName} ${afterBuoy.name}` : afterName;
+mark2El.textContent = afterDisplay;
 mark2El.className = 'map-nav-mark ' + (afterIsPort ? 'port' : 'starboard');
 if (afterBuoy) {
 const dist = calculateDistance(app.userPosition.latitude, app.userPosition.longitude, afterBuoy.coords[0], afterBuoy.coords[1]) / 1852;
